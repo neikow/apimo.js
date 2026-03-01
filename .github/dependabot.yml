@@ -1,35 +1,29 @@
 version: 2
 updates:
+  # 1. Monitor NPM packages
   - package-ecosystem: "npm"
     directory: "/"
     schedule:
-      interval: "weekly"
-    open-pull-requests-limit: 10
+      interval: "weekly" # Weekly is better for low-maintenance than daily
+    open-pull-requests-limit: 5
     groups:
-      security:
+      # Group safe updates together to reduce PR noise
+      safe-updates:
         patterns:
           - "*"
         update-types:
-          - "security"
-      all-deps:
-        patterns:
-          - "*"
-        exclude-patterns:
-          - "*"
-        update-types:
-          - "version-update:semver-major"
-          - "version-update:semver-minor"
-          - "version-update:semver-patch"
-    allow:
-      - dependency-type: "all"
-    commit-message:
-      prefix: "chore(deps)"
-      include: "scope"
-    labels:
-      - "dependencies"
-      - "security"
-    rebase-strategy: "auto"
+          - "minor"
+          - "patch"
+      # Major updates will now get their own separate PRs
+      # This prevents one broken major update from blocking everything
     ignore:
       - dependency-name: "eslint"
-        update-types: ["version-update:semver-major"]
+        update-types: ["major"]
+      - dependency-name: "typescript"
+        update-types: ["major"]
 
+  # 2. Monitor GitHub Actions (Security & Stability)
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "monthly" # Actions change less frequently
