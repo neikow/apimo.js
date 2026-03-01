@@ -1,6 +1,6 @@
 {
   "name": "apimo.js",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "A wrapper for the Apimo API with catalog caching for building custom Real Estate website using their technologies.",
   "author": "Vitaly Lysen <vitaly@lysen.dev> (https://lysen.dev)",
   "license": "MIT",
