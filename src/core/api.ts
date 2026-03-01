@@ -7,6 +7,7 @@ import type { ApiSearchParams } from '../utils/url'
 import Bottleneck from 'bottleneck'
 import { merge } from 'merge-anything'
 import { z } from 'zod'
+import { ApiConfigurationError, ApiResponseValidationError, throwForStatus } from '../errors'
 import { getAgencySchema } from '../schemas/agency'
 import { CatalogDefinitionSchema, CatalogEntrySchema } from '../schemas/common'
 import { getPropertySchema } from '../schemas/property'
@@ -75,7 +76,26 @@ export class Apimo {
     // Additional config, to tweak how the API is handled
     config: DeepPartial<AdditionalConfig> = DEFAULT_ADDITIONAL_CONFIG,
   ) {
+    if (!provider || provider.trim() === '') {
+      throw new ApiConfigurationError('provider must be a non-empty string.')
+    }
+    if (!token || token.trim() === '') {
+      throw new ApiConfigurationError('token must be a non-empty string.')
+    }
+
     this.config = merge(DEFAULT_ADDITIONAL_CONFIG, config) as AdditionalConfig
+
+    if (!this.config.baseUrl || this.config.baseUrl.trim() === '') {
+      throw new ApiConfigurationError('baseUrl must be a non-empty string.')
+    }
+    try {
+      // eslint-disable-next-line no-new
+      new URL(this.config.baseUrl)
+    }
+    catch {
+      throw new ApiConfigurationError(`baseUrl "${this.config.baseUrl}" is not a valid URL.`)
+    }
+
     this.cache = this.config.catalogs.cache.active ? this.config.catalogs.cache.adapter : new DummyCache()
     this.limiter = new Bottleneck({
       reservoir: 10,
@@ -101,18 +121,32 @@ export class Apimo {
   }
 
   public async get<S extends z.Schema>(path: string[], schema: S, options?: Partial<ApiSearchParams>): Promise<z.infer<S>> {
-    const response = await this.fetch(
-      makeApiUrl(path, this.config, {
-        culture: this.config.culture,
-        ...options,
-      }),
-    )
+    const url = makeApiUrl(path, this.config, {
+      culture: this.config.culture,
+      ...options,
+    })
+
+    const response = await this.fetch(url)
 
     if (!response.ok) {
-      throw new Error(await response.json())
+      let responseBody: unknown
+      try {
+        responseBody = await response.json()
+      }
+      catch {
+        // The body wasn't JSON — leave responseBody as undefined
+      }
+      throwForStatus(response.status, url.toString(), responseBody)
     }
 
-    return schema.parseAsync(await response.json())
+    const json = await response.json()
+
+    const result = await schema.safeParseAsync(json)
+    if (!result.success) {
+      throw new ApiResponseValidationError(url.toString(), result.error)
+    }
+
+    return result.data
   }
 
   public async fetchCatalogs(): Promise<CatalogDefinition[]> {

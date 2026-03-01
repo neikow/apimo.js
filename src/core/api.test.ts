@@ -3,6 +3,18 @@ import type { CatalogName } from '../consts/catalogs'
 import type { ApiCulture } from '../consts/languages'
 import { afterEach, beforeEach, it as defaultIt, describe, expect, vi } from 'vitest'
 import { z } from 'zod'
+import {
+  ApiBadRequestError,
+  ApiConfigurationError,
+  ApiForbiddenError,
+  ApiHttpError,
+  ApimoError,
+  ApiNotFoundError,
+  ApiRateLimitError,
+  ApiResponseValidationError,
+  ApiServerError,
+  ApiUnauthorizedError,
+} from '../errors'
 import { DummyCache } from '../services/storage/dummy.cache'
 import { MemoryCache } from '../services/storage/memory.cache'
 import { Apimo, DEFAULT_BASE_URL } from './api'
@@ -303,6 +315,159 @@ describe('api', () => {
       const result = await api.populateCache(catalogName, culture, 999)
 
       expect(result).toBeNull()
+    })
+  })
+
+  describe('constructor - validation', () => {
+    it('should throw ApiConfigurationError when provider is empty', () => {
+      expect(() => new Apimo('', 'TOKEN')).toThrowError(ApiConfigurationError)
+    })
+
+    it('should throw ApiConfigurationError when provider is blank whitespace', () => {
+      expect(() => new Apimo('   ', 'TOKEN')).toThrowError(ApiConfigurationError)
+    })
+
+    it('should throw ApiConfigurationError when token is empty', () => {
+      expect(() => new Apimo('0', '')).toThrowError(ApiConfigurationError)
+    })
+
+    it('should throw ApiConfigurationError when token is blank whitespace', () => {
+      expect(() => new Apimo('0', '   ')).toThrowError(ApiConfigurationError)
+    })
+
+    it('should throw ApiConfigurationError when baseUrl is not a valid URL', () => {
+      expect(() => new Apimo('0', 'TOKEN', { baseUrl: 'not-a-url' })).toThrowError(ApiConfigurationError)
+    })
+
+    it('should throw ApiConfigurationError when baseUrl is an empty string', () => {
+      expect(() => new Apimo('0', 'TOKEN', { baseUrl: '' })).toThrowError(ApiConfigurationError)
+    })
+
+    it('apiConfigurationError is an instance of ApimoError', () => {
+      expect(() => new Apimo('', 'TOKEN')).toThrowError(ApimoError)
+    })
+
+    it('apiConfigurationError message should include "Configuration error:"', () => {
+      expect(() => new Apimo('', 'TOKEN')).toThrow('Configuration error:')
+    })
+  })
+
+  describe('get - HTTP error mapping', () => {
+    const httpErrorCases = [
+      { status: 400, ErrorClass: ApiBadRequestError },
+      { status: 401, ErrorClass: ApiUnauthorizedError },
+      { status: 403, ErrorClass: ApiForbiddenError },
+      { status: 404, ErrorClass: ApiNotFoundError },
+      { status: 429, ErrorClass: ApiRateLimitError },
+      { status: 500, ErrorClass: ApiServerError },
+      { status: 503, ErrorClass: ApiServerError },
+    ] as const
+
+    for (const { status, ErrorClass } of httpErrorCases) {
+      it(`should throw ${ErrorClass.name} for HTTP ${status}`, async ({ api, mockResponse }) => {
+        mockResponse({ ok: false, status, json: () => ({ error: 'Some API error' }) })
+        await expect(api.get(['path'], z.object({ success: z.boolean() }))).rejects.toThrowError(ErrorClass)
+      })
+
+      it(`${ErrorClass.name} (${status}) is an instance of ApiHttpError`, async ({ api, mockResponse }) => {
+        mockResponse({ ok: false, status, json: () => null })
+        await expect(api.get(['path'], z.object({ success: z.boolean() }))).rejects.toThrowError(ApiHttpError)
+      })
+
+      it(`${ErrorClass.name} (${status}) is an instance of ApimoError`, async ({ api, mockResponse }) => {
+        mockResponse({ ok: false, status, json: () => null })
+        await expect(api.get(['path'], z.object({ success: z.boolean() }))).rejects.toThrowError(ApimoError)
+      })
+    }
+
+    it('should attach the correct statusCode property', async ({ api, mockResponse }) => {
+      mockResponse({ ok: false, status: 404, json: () => null })
+      const error = await api.get(['path'], z.object({ success: z.boolean() })).catch(e => e)
+      expect(error).toBeInstanceOf(ApiNotFoundError)
+      expect((error as ApiNotFoundError).statusCode).toBe(404)
+    })
+
+    it('should attach the response body to the error when available', async ({ api, mockResponse }) => {
+      const body = { error: 'Not found', code: 42 }
+      mockResponse({ ok: false, status: 404, json: () => body })
+      const error = await api.get(['path'], z.object({ success: z.boolean() })).catch(e => e)
+      expect(error).toBeInstanceOf(ApiNotFoundError)
+      expect((error as ApiNotFoundError).responseBody).toEqual(body)
+    })
+
+    it('should attach the request URL to the error', async ({ api, mockResponse }) => {
+      mockResponse({ ok: false, status: 401, json: () => null })
+      const error = await api.get(['agencies'], z.object({ success: z.boolean() })).catch(e => e)
+      expect(error).toBeInstanceOf(ApiUnauthorizedError)
+      expect((error as ApiUnauthorizedError).url).toContain('agencies')
+    })
+
+    it('should handle non-JSON error body gracefully (no responseBody)', async ({ api }) => {
+      mockFetch.mockResolvedValue({
+        ok: false,
+        status: 500,
+        json: vi.fn().mockRejectedValue(new SyntaxError('Unexpected token')),
+        text: vi.fn(),
+        headers: new Headers(),
+        statusText: 'Internal Server Error',
+        url: '',
+        redirected: false,
+        type: 'basic',
+        body: null,
+        bodyUsed: false,
+        clone: vi.fn(),
+        arrayBuffer: vi.fn(),
+        blob: vi.fn(),
+        formData: vi.fn(),
+      } as unknown as Response)
+
+      const error = await api.get(['path'], z.object({ success: z.boolean() })).catch(e => e)
+      expect(error).toBeInstanceOf(ApiServerError)
+      expect((error as ApiServerError).responseBody).toBeUndefined()
+    })
+
+    it('should throw generic ApiHttpError for uncommon non-5xx, non-mapped status codes', async ({ api, mockResponse }) => {
+      mockResponse({ ok: false, status: 418, json: () => null })
+      const error = await api.get(['path'], z.object({ success: z.boolean() })).catch(e => e)
+      expect(error).toBeInstanceOf(ApiHttpError)
+      expect((error as ApiHttpError).statusCode).toBe(418)
+    })
+  })
+
+  describe('get - response validation', () => {
+    it('should throw ApiResponseValidationError when response does not match schema', async ({ api, mockResponse }) => {
+      mockResponse({ json: () => ({ wrongField: 'bad data' }) })
+      await expect(
+        api.get(['catalogs'], z.object({ success: z.boolean() })),
+      ).rejects.toThrowError(ApiResponseValidationError)
+    })
+
+    it('should include the request URL in ApiResponseValidationError', async ({ api, mockResponse }) => {
+      mockResponse({ json: () => ({ wrongField: 'bad data' }) })
+      const error = await api.get(['catalogs'], z.object({ success: z.boolean() })).catch(e => e)
+      expect(error).toBeInstanceOf(ApiResponseValidationError)
+      expect((error as ApiResponseValidationError).url).toContain('catalogs')
+    })
+
+    it('should expose zodError with issue details on ApiResponseValidationError', async ({ api, mockResponse }) => {
+      mockResponse({ json: () => ({ wrongField: 'bad data' }) })
+      const error = await api.get(['catalogs'], z.object({ success: z.boolean() })).catch(e => e)
+      expect(error).toBeInstanceOf(ApiResponseValidationError)
+      expect((error as ApiResponseValidationError).zodError.issues.length).toBeGreaterThan(0)
+    })
+
+    it('apiResponseValidationError message should contain field path information', async ({ api, mockResponse }) => {
+      mockResponse({ json: () => ({ success: 'not-a-boolean' }) })
+      const error = await api.get(['catalogs'], z.object({ success: z.boolean() })).catch(e => e)
+      expect(error).toBeInstanceOf(ApiResponseValidationError)
+      expect((error as ApiResponseValidationError).message).toContain('success')
+    })
+
+    it('apiResponseValidationError is an instance of ApimoError', async ({ api, mockResponse }) => {
+      mockResponse({ json: () => ({ wrongField: 'bad data' }) })
+      await expect(
+        api.get(['catalogs'], z.object({ success: z.boolean() })),
+      ).rejects.toThrowError(ApimoError)
     })
   })
 })

@@ -7,6 +7,20 @@ export { type AdditionalConfig, Apimo, DEFAULT_ADDITIONAL_CONFIG, DEFAULT_BASE_U
 // Backward compatibility - keep Api as alias
 export { Apimo as Api } from './core/api'
 
+// Errors
+export {
+  ApiBadRequestError,
+  ApiConfigurationError,
+  ApiForbiddenError,
+  ApiHttpError,
+  ApimoError,
+  ApiNotFoundError,
+  ApiRateLimitError,
+  ApiResponseValidationError,
+  ApiServerError,
+  ApiUnauthorizedError,
+} from './errors'
+
 export type { ApimoAgency, ApimoPartner, ApimoRate } from './schemas/agency'
 
 // Schema types
