@@ -7,7 +7,13 @@ import type { ApiSearchParams } from '../utils/url'
 import Bottleneck from 'bottleneck'
 import { merge } from 'merge-anything'
 import { z } from 'zod'
-import { ApiConfigurationError, ApiResponseValidationError, throwForStatus } from '../errors'
+import {
+  ApiConfigurationError,
+  ApiResponseValidationError,
+  ApiRetryExhaustedError,
+  isRetryable,
+  throwForStatus,
+} from '../errors'
 import { getAgencySchema } from '../schemas/agency'
 import { CatalogDefinitionSchema, CatalogEntrySchema } from '../schemas/common'
 import { getPropertySchema } from '../schemas/property'
@@ -45,6 +51,28 @@ export interface AdditionalConfig {
       transformFn?: CatalogTransformer
     }
   }
+  // Automatic retry configuration for transient failures (429, 5xx, network errors).
+  retry: {
+    /**
+     * Maximum total number of attempts (1 = no retries, 2 = one retry, etc.).
+     * @default 3
+     */
+    attempts: number
+    /**
+     * Delay in milliseconds before the first retry.
+     * Subsequent delays are calculated according to the `backoff` strategy.
+     * @default 200
+     */
+    initialDelayMs: number
+    /**
+     * Back-off strategy applied between attempts.
+     * - `exponential` — delay doubles on every retry (200 → 400 → 800 …)
+     * - `linear`      — delay increases by `initialDelayMs` each time (200 → 400 → 600 …)
+     * - `fixed`       — the same delay is used for every retry
+     * @default 'exponential'
+     */
+    backoff: 'exponential' | 'linear' | 'fixed'
+  }
 }
 
 export const DEFAULT_BASE_URL = 'https://api.apimo.pro'
@@ -60,6 +88,11 @@ export const DEFAULT_ADDITIONAL_CONFIG: AdditionalConfig = {
     transform: {
       active: true,
     },
+  },
+  retry: {
+    attempts: 3,
+    initialDelayMs: 200,
+    backoff: 'exponential',
   },
 }
 
@@ -126,27 +159,49 @@ export class Apimo {
       ...options,
     })
 
-    const response = await this.fetch(url)
+    const { attempts, initialDelayMs, backoff } = this.config.retry
+    let lastError: unknown
 
-    if (!response.ok) {
-      let responseBody: unknown
+    for (let attempt = 1; attempt <= attempts; attempt++) {
       try {
-        responseBody = await response.json()
+        const response = await this.fetch(url)
+
+        if (!response.ok) {
+          let responseBody: unknown
+          try {
+            responseBody = await response.json()
+          }
+          catch {
+            // The body wasn't JSON — leave responseBody as undefined
+          }
+          throwForStatus(response.status, url.toString(), responseBody)
+        }
+
+        const json = await response.json()
+        const result = await schema.safeParseAsync(json)
+        if (!result.success) {
+          throw new ApiResponseValidationError(url.toString(), result.error)
+        }
+
+        return result.data
       }
-      catch {
-        // The body wasn't JSON — leave responseBody as undefined
+      catch (error) {
+        lastError = error
+
+        const hasMoreAttempts = attempt < attempts
+        if (!isRetryable(error)) {
+          // Non-transient errors (4xx, schema failures, etc.) — propagate immediately
+          throw error
+        }
+        if (!hasMoreAttempts) {
+          break
+        }
+
+        await this.sleep(this.retryDelayMs(attempt, initialDelayMs, backoff))
       }
-      throwForStatus(response.status, url.toString(), responseBody)
     }
 
-    const json = await response.json()
-
-    const result = await schema.safeParseAsync(json)
-    if (!result.success) {
-      throw new ApiResponseValidationError(url.toString(), result.error)
-    }
-
-    return result.data
+    throw new ApiRetryExhaustedError(attempts, lastError)
   }
 
   public async fetchCatalogs(): Promise<CatalogDefinition[]> {
@@ -157,7 +212,9 @@ export class Apimo {
   }
 
   public async populateCache(catalogName: CatalogName, culture: ApiCulture): Promise<void>
+
   public async populateCache(catalogName: CatalogName, culture: ApiCulture, id: number): Promise<CatalogEntryName | null>
+
   public async populateCache(catalogName: CatalogName, culture: ApiCulture, id?: number): Promise<void | CatalogEntryName | null> {
     const catalog = await this.fetchCatalog(
       catalogName,
@@ -229,6 +286,19 @@ export class Apimo {
       }),
       options,
     )
+  }
+
+  /** Calculates the delay before the next retry attempt (1-based attempt index). */
+  private retryDelayMs(attempt: number, initialDelayMs: number, backoff: AdditionalConfig['retry']['backoff']): number {
+    switch (backoff) {
+      case 'exponential': return initialDelayMs * 2 ** (attempt - 1)
+      case 'linear': return initialDelayMs * attempt
+      case 'fixed': return initialDelayMs
+    }
+  }
+
+  private sleep(ms: number): Promise<void> {
+    return new Promise(resolve => setTimeout(resolve, ms))
   }
 
   private getLocalizedCatalogTransformer(culture: ApiCulture): LocalizedCatalogTransformer {

@@ -17,6 +17,7 @@ export {
   ApiNotFoundError,
   ApiRateLimitError,
   ApiResponseValidationError,
+  ApiRetryExhaustedError,
   ApiServerError,
   ApiUnauthorizedError,
 } from './errors'

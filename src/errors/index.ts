@@ -177,8 +177,58 @@ export class ApiConfigurationError extends ApimoError {
 }
 
 // ---------------------------------------------------------------------------
+// Retry Errors
+// ---------------------------------------------------------------------------
+
+/**
+ * Thrown when all retry attempts have been exhausted and the last attempt still
+ * failed. Inspect `cause` for the underlying error from the final attempt.
+ *
+ * @example
+ * ```ts
+ * } catch (e) {
+ *   if (e instanceof ApiRetryExhaustedError) {
+ *     console.error(`Gave up after ${e.attempts} attempt(s). Last error:`, e.cause)
+ *   }
+ * }
+ * ```
+ */
+export class ApiRetryExhaustedError extends ApimoError {
+  constructor(
+    /** Total number of attempts made (including the first). */
+    public readonly attempts: number,
+    /** The error thrown by the final attempt. */
+    public readonly cause: unknown,
+  ) {
+    super(
+      `Request failed after ${attempts} attempt${attempts === 1 ? '' : 's'}. Last error: ${cause instanceof Error ? cause.message : String(cause)}`,
+    )
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
+
+/**
+ * Returns `true` for errors that are safe to retry (transient failures).
+ * 429 and 5xx HTTP errors are retryable; 4xx errors (except 429) are not.
+ * Schema validation errors are never retried (same response will always fail).
+ * Non-HTTP errors (network failures, etc.) are considered retryable.
+ *
+ * @internal
+ */
+export function isRetryable(error: unknown): boolean {
+  // Schema validation failures are deterministic — retrying will not help
+  if (error instanceof ApiResponseValidationError) {
+    return false
+  }
+  if (error instanceof ApiHttpError) {
+    return error.statusCode === 429 || error.statusCode >= 500
+  }
+  // Network errors, timeouts, etc.
+  return true
+}
 
 /**
  * Maps an HTTP status code to the most specific `ApiHttpError` subclass and
