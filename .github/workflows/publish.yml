@@ -72,7 +72,6 @@ jobs:
           rm -rf src/
           rm -rf coverage/
           rm -rf cache/
-          rm -rf node_modules/
           rm -rf .git/
           rm -rf .github/
           rm -rf .idea/
@@ -86,6 +85,6 @@ jobs:
           ls -la
 
       - name: Publish to NPM
-        run: npm publish --access public
+        run: npm publish --access public --ignore-scripts
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
