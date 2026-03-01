@@ -1,29 +1,29 @@
 version: 2
 updates:
   # 1. Monitor NPM packages
-  - package-ecosystem: "npm"
-    directory: "/"
+  - package-ecosystem: npm
+    directory: /
     schedule:
-      interval: "weekly" # Weekly is better for low-maintenance than daily
+      interval: weekly # Weekly is better for low-maintenance than daily
     open-pull-requests-limit: 5
     groups:
       # Group safe updates together to reduce PR noise
       safe-updates:
         patterns:
-          - "*"
+          - '*'
         update-types:
-          - "minor"
-          - "patch"
+          - minor
+          - patch
       # Major updates will now get their own separate PRs
       # This prevents one broken major update from blocking everything
     ignore:
-      - dependency-name: "eslint"
-        update-types: ["major"]
-      - dependency-name: "typescript"
-        update-types: ["major"]
+      - dependency-name: eslint
+        update-types: [major]
+      - dependency-name: typescript
+        update-types: [major]
 
   # 2. Monitor GitHub Actions (Security & Stability)
-  - package-ecosystem: "github-actions"
-    directory: "/"
+  - package-ecosystem: github-actions
+    directory: /
     schedule:
-      interval: "monthly" # Actions change less frequently
+      interval: monthly # Actions change less frequently
