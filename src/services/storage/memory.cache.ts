@@ -1,7 +1,7 @@
 import type { CatalogName } from '../../consts/catalogs'
 import type { ApiCulture } from '../../consts/languages'
 import type { CatalogEntry } from '../../schemas/common'
-import type { ApiCacheAdapter, CatalogEntryName } from './types'
+import type { CatalogCacheAdapter, CatalogEntryName } from './types'
 import { CacheExpiredError } from './types'
 
 const MS_IN_ONE_WEEK = 7 * 24 * 60 * 60 * 1000
@@ -11,7 +11,7 @@ type Memory = Map<string, {
   cache: Map<number, CatalogEntryName>
 }>
 
-export class MemoryCache implements ApiCacheAdapter {
+export class MemoryCache implements CatalogCacheAdapter {
   readonly cacheExpirationMs: number
   readonly _MEMORY: Memory
 

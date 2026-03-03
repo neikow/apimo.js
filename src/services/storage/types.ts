@@ -7,11 +7,14 @@ export interface CatalogEntryName {
   namePlural: string | undefined
 }
 
-export interface ApiCacheAdapter {
+export interface CatalogCacheAdapter {
   setEntries: (catalogName: CatalogName, culture: ApiCulture, entries: CatalogEntry[]) => Promise<void>
   getEntry: (catalogName: CatalogName, culture: ApiCulture, id: number) => Promise<CatalogEntryName | null>
   getEntries: (catalogName: CatalogName, culture: ApiCulture) => Promise<CatalogEntry[]>
 }
+
+// @deprecated Use CatalogCacheAdapter instead
+export interface ApiCacheAdapter extends CatalogCacheAdapter {}
 
 export class CacheExpiredError extends Error {
 }

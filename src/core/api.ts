@@ -1,7 +1,7 @@
 import type { CatalogName } from '../consts/catalogs'
 import type { ApiCulture } from '../consts/languages'
 import type { CatalogDefinition, CatalogEntry, CatalogTransformer, LocalizedCatalogTransformer } from '../schemas/common'
-import type { ApiCacheAdapter, CatalogEntryName } from '../services/storage/types'
+import type { CatalogCacheAdapter, CatalogEntryName } from '../services/storage/types'
 import type { DeepPartial } from '../types'
 import type { ApiSearchParams } from '../utils/url'
 import Bottleneck from 'bottleneck'
@@ -41,7 +41,7 @@ export interface AdditionalConfig {
       // Whether to use the catalog caching. A value of false means that catalogs won't be cached. You will need to supply your own `catalogs.transform.transformFn`.
       active: boolean
       // Where to store the catalogs cache. Currently only file is supported.
-      adapter: ApiCacheAdapter
+      adapter: CatalogCacheAdapter
     }
     // Catalog transformation related configuration
     transform: {
@@ -98,7 +98,7 @@ export const DEFAULT_ADDITIONAL_CONFIG: AdditionalConfig = {
 
 export class Apimo {
   readonly config: AdditionalConfig
-  readonly cache: ApiCacheAdapter
+  readonly cache: CatalogCacheAdapter
   readonly limiter: Bottleneck
 
   constructor(

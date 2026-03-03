@@ -1,10 +1,10 @@
 import type { CatalogName } from '../../consts/catalogs'
 import type { ApiCulture } from '../../consts/languages'
 import type { CatalogEntry } from '../../schemas/common'
-import type { ApiCacheAdapter, CatalogEntryName } from './types'
+import type { CatalogCacheAdapter, CatalogEntryName } from './types'
 import { CacheExpiredError } from './types'
 
-export class DummyCache implements ApiCacheAdapter {
+export class DummyCache implements CatalogCacheAdapter {
   constructor() {
   }
 

@@ -52,13 +52,14 @@ export type {
   ApimoWater,
 } from './schemas/property'
 
+export { DatabaseCache, type DatabaseCacheConfig, type DatabaseType } from './services/storage/database.cache'
 export { DummyCache } from './services/storage/dummy.cache'
 export { FilesystemCache } from './services/storage/filesystem.cache'
 
 // Cache adapters
 export { MemoryCache } from './services/storage/memory.cache'
 // Cache types and errors
-export { type ApiCacheAdapter, CacheExpiredError, type CatalogEntryName } from './services/storage/types'
+export { type ApiCacheAdapter, CacheExpiredError, type CatalogCacheAdapter, type CatalogEntryName } from './services/storage/types'
 
 // Utility types
 export type { DeepPartial } from './types'

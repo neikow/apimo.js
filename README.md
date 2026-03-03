@@ -109,6 +109,48 @@ const fsCache = new FilesystemCache({
 })
 ```
 
+#### DatabaseCache
+
+Persists catalog entries to a database (SQLite or PostgreSQL). Survives restarts and allows sharing cache across multiple instances.
+
+> **Note**: Database dependencies are optional peer dependencies. You need to install them separately based on your database choice:
+> - For SQLite: `npm install better-sqlite3`
+> - For PostgreSQL: `npm install pg` (and optionally `npm install @types/pg` for TypeScript projects)
+
+**SQLite:**
+```typescript
+import { DatabaseCache } from 'apimo.js'
+
+// First install: npm install better-sqlite3
+const sqliteCache = new DatabaseCache({
+  type: 'sqlite',
+  sqlite: {
+    path: './cache/catalogs.db', // Database file path
+  },
+  cacheExpirationMs: 7 * 24 * 60 * 60 * 1000, // default: 1 week
+})
+```
+
+**PostgreSQL:**
+```typescript
+import { DatabaseCache } from 'apimo.js'
+
+// First install: npm install pg
+const postgresCache = new DatabaseCache({
+  type: 'postgres',
+  postgres: {
+    connectionString: 'postgresql://user:password@localhost:5432/apimo_cache',
+    // OR individual connection parameters:
+    // host: 'localhost',
+    // port: 5432,
+    // database: 'apimo_cache',
+    // user: 'your_user',
+    // password: 'your_password',
+  },
+  cacheExpirationMs: 7 * 24 * 60 * 60 * 1000,
+})
+```
+
 #### DummyCache
 
 Disables caching entirely. Every catalog look-up hits the API directly.

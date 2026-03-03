@@ -1,7 +1,7 @@
 import type { CatalogName } from '../../consts/catalogs'
 import type { ApiCulture } from '../../consts/languages'
 import type { CatalogEntry } from '../../schemas/common'
-import type { ApiCacheAdapter, CatalogEntryName } from './types'
+import type { CatalogCacheAdapter, CatalogEntryName } from './types'
 import { mkdirSync } from 'node:fs'
 import { readFile, writeFile } from 'node:fs/promises'
 import * as path from 'node:path'
@@ -10,7 +10,7 @@ import { CacheExpiredError } from './types'
 const DEFAULT_FILESYSTEM_CACHE_LOCATION = './cache/catalogs'
 const MS_IN_ONE_WEEK = 7 * 24 * 60 * 60 * 1000
 
-export class FilesystemCache implements ApiCacheAdapter {
+export class FilesystemCache implements CatalogCacheAdapter {
   private readonly path: string
   private readonly cacheExpirationMs: number
 
