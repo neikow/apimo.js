@@ -55,6 +55,18 @@ export interface AdditionalConfig {
       adapter: ApiCacheAdapter
     }
   }
+  /**
+   * How to handle a response that fails runtime (Zod) validation.
+   *
+   * The generated schemas mirror Apimo's published OpenAPI spec, which drifts
+   * from what the API actually returns. The schemas are loosened to tolerate
+   * the known divergences, but unforeseen drift should not hard-crash a caller.
+   *
+   * - `'error'` — throw {@link ApiResponseValidationError} (strictest).
+   * - `'warn'`  — log the issues and return the raw payload (default).
+   * - `'off'`   — skip validation entirely.
+   */
+  validateResponse: 'error' | 'warn' | 'off'
 }
 
 export const DEFAULT_BASE_URL = 'https://api.apimo.pro'
@@ -73,6 +85,7 @@ export const DEFAULT_ADDITIONAL_CONFIG: AdditionalConfig = {
       adapter: new MemoryCache(),
     },
   },
+  validateResponse: 'warn',
 }
 
 export class Apimo {
@@ -167,7 +180,7 @@ export class Apimo {
         id: entry.id,
         name: entry.name,
         name_plurial: entry.name_plurial ?? undefined,
-        culture: entry.culture,
+        culture: entry.culture ?? undefined,
       }))
 
     await this.cache.setEntries(catalogName, culture, entries)
@@ -226,12 +239,29 @@ export class Apimo {
     return apimoRequestContext.run(this.requestContext, fn)
   }
 
-  /** Validates a response body against a generated Zod schema. */
+  /**
+   * Validates a response body against a generated Zod schema.
+   *
+   * Behaviour on failure depends on {@link AdditionalConfig.validateResponse};
+   * see that field for the rationale (spec drift). On `'warn'`/`'off'` the raw
+   * payload is returned so a caller is never hard-crashed by spec divergence.
+   */
   private parse<S extends z.ZodTypeAny>(schema: S, response: { data: unknown }, label: string): z.infer<S> {
+    if (this.config.validateResponse === 'off') {
+      return response.data as z.infer<S>
+    }
+
     const result = schema.safeParse(response.data)
-    if (!result.success) {
+    if (result.success) {
+      return result.data
+    }
+
+    if (this.config.validateResponse === 'error') {
       throw new ApiResponseValidationError(label, result.error)
     }
-    return result.data
+
+    // 'warn': surface the divergence but keep the sync running with raw data.
+    console.warn(new ApiResponseValidationError(label, result.error).message)
+    return response.data as z.infer<S>
   }
 }

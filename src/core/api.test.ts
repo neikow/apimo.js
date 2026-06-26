@@ -46,10 +46,11 @@ function makeMockResponse(config?: ResponseMockerConfig): Response {
  * Builds an Apimo client with retries disabled and a fresh cache, so tests
  * don't share the module-level MemoryCache held by DEFAULT_ADDITIONAL_CONFIG.
  */
-function makeApi() {
+function makeApi(overrides: Record<string, unknown> = {}) {
   return new Apimo(PROVIDER, TOKEN, {
     retry: { attempts: 1 },
     catalogs: { cache: { adapter: new MemoryCache() } },
+    ...overrides,
   })
 }
 
@@ -85,6 +86,7 @@ describe('apimo', () => {
             adapter: expect.any(MemoryCache),
           },
         },
+        validateResponse: 'warn',
       })
     })
 
@@ -159,10 +161,60 @@ describe('apimo', () => {
       expect(result.properties?.[0]?.user?.id).toBe(7)
     })
 
-    it('throws ApiResponseValidationError when the body shape is wrong', async () => {
+    it('throws ApiResponseValidationError when the body shape is wrong (validateResponse: error)', async () => {
       mockFetch.mockResolvedValue(makeMockResponse({ json: () => ({ total_items: 'not-a-number' }) }))
 
-      await expect(makeApi().fetchProperties(123)).rejects.toThrowError(ApiResponseValidationError)
+      await expect(makeApi({ validateResponse: 'error' }).fetchProperties(123)).rejects.toThrowError(ApiResponseValidationError)
+    })
+
+    it('warns and returns the raw payload instead of throwing (default validateResponse: warn)', async () => {
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+      mockFetch.mockResolvedValue(makeMockResponse({ json: () => ({ total_items: 'not-a-number' }) }))
+
+      const result = await makeApi().fetchProperties(123)
+
+      expect(warn).toHaveBeenCalled()
+      expect((result as { total_items: unknown }).total_items).toBe('not-a-number')
+      warn.mockRestore()
+    })
+
+    // The vendored OpenAPI spec is stricter than what Apimo actually returns:
+    // numbers come as strings (and vice-versa), dates are `YYYY-MM-DD HH:MM:SS`,
+    // and `null` stands in for "no value". The generated schemas are loosened
+    // (see scripts/lenient-zod.mjs) so such payloads parse under the strictest
+    // `validateResponse: 'error'` mode without ever falling back to passthrough.
+    it('coerces and tolerates the real Apimo response shape (regression)', async () => {
+      mockFetch.mockResolvedValue(makeMockResponse({
+        json: () => ({
+          total_items: 1,
+          timestamp: 1712000000,
+          properties: [{
+            id: 1,
+            reference: 12345, // number where spec says string
+            ranking: null, // null where spec says number
+            availability: '15', // string where spec says number
+            user: { id: '7', agency: '99', created_at: '2024-06-26 14:30:00' },
+            view: { type: null, landscape: ['6'] },
+            construction: { method: null, construction_year: '1990' },
+            floor: { type: null, value: null, levels: '2', floors: '5' },
+            orientations: ['16'],
+            areas: [{ type: 1, number: 2, area: 20 }],
+            created_at: '2024-06-26 14:30:00',
+            updated_at: '2024-06-26 14:30:00',
+          }],
+        }),
+      }))
+
+      const result = await makeApi({ validateResponse: 'error' }).fetchProperties(123)
+      const property = result.properties?.[0]
+
+      expect(property?.id).toBe(1)
+      expect(property?.reference).toBe('12345') // coerced to string
+      expect(property?.ranking).toBeNull() // null preserved, not coerced to 0
+      expect(property?.availability).toBe(15) // coerced to number
+      expect(property?.user?.id).toBe(7)
+      expect(property?.view?.landscape?.[0]).toBe(6)
+      expect(property?.created_at).toBe('2024-06-26 14:30:00') // lenient date string
     })
   })
 
