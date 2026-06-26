@@ -18,8 +18,8 @@ import * as zod from 'zod';
  * @summary Get a list of catalogs
  */
 export const ListCatalogsResponseItem = zod.object({
-  "name": zod.string().optional(),
-  "path": zod.string().optional()
+  "name": zod.coerce.string().nullish(),
+  "path": zod.coerce.string().nullish()
 })
 export const ListCatalogsResponse = zod.array(ListCatalogsResponseItem)
 
@@ -28,18 +28,18 @@ export const ListCatalogsResponse = zod.array(ListCatalogsResponseItem)
  * @summary Get a specific catalog
  */
 export const GetCatalogParams = zod.object({
-  "catalog_id": zod.string().describe('Catalog name (e.g. property_type, property_category...)')
+  "catalog_id": zod.coerce.string().describe('Catalog name (e.g. property_type, property_category...)')
 })
 
 export const GetCatalogQueryParams = zod.object({
-  "culture": zod.string().optional().describe('Label language (ISO 639-1)')
+  "culture": zod.coerce.string().nullish().describe('Label language (ISO 639-1)')
 })
 
 export const GetCatalogResponseItem = zod.object({
-  "id": zod.number().optional(),
-  "culture": zod.string().optional(),
-  "name": zod.string().optional(),
-  "name_plurial": zod.string().nullish()
+  "id": zod.coerce.number().nullish(),
+  "culture": zod.coerce.string().nullish(),
+  "name": zod.coerce.string().nullish(),
+  "name_plurial": zod.coerce.string().nullish()
 })
 export const GetCatalogResponse = zod.array(GetCatalogResponseItem)
 
@@ -64,30 +64,30 @@ export const listAgenciesQueryLimitMax = 1000;
 export const listAgenciesQueryOffsetDefault = 0;
 
 export const ListAgenciesQueryParams = zod.object({
-  "limit": zod.number().max(listAgenciesQueryLimitMax).default(listAgenciesQueryLimitDefault).describe('Number of records to return (max: 1000)'),
-  "offset": zod.number().default(listAgenciesQueryOffsetDefault).describe('Number of records to skip')
+  "limit": zod.coerce.number().max(listAgenciesQueryLimitMax).default(listAgenciesQueryLimitDefault).describe('Number of records to return (max: 1000)'),
+  "offset": zod.coerce.number().default(listAgenciesQueryOffsetDefault).describe('Number of records to skip')
 })
 
 export const ListAgenciesResponse = zod.object({
-  "total_items": zod.number().optional().describe('Total number of items (regardless of pagination)'),
-  "timestamp": zod.number().optional().describe('UNIX timestamp of the most recent item in the list')
+  "total_items": zod.coerce.number().nullish().describe('Total number of items (regardless of pagination)'),
+  "timestamp": zod.coerce.number().nullish().describe('UNIX timestamp of the most recent item in the list')
 }).and(zod.object({
   "agencies": zod.array(zod.object({
-  "id": zod.number().optional().describe('Unique ID of the agency'),
-  "name": zod.string().optional().describe('Agency name'),
-  "address": zod.string().optional().describe('Postal address'),
-  "zipcode": zod.string().optional().describe('Postal code'),
-  "city": zod.string().optional().describe('City'),
-  "country": zod.string().optional().describe('ISO 3166-1 alpha-2 country code'),
-  "phone": zod.string().optional().describe('Phone number with country code'),
-  "fax": zod.string().nullish().describe('Fax number with country code'),
-  "email": zod.email().optional().describe('Agency contact email'),
-  "website": zod.url().nullish().describe('Agency website'),
-  "picture": zod.url().nullish().describe('URL of the agency logo'),
-  "created_at": zod.iso.datetime({"offset":true}).optional().describe('Creation date'),
-  "updated_at": zod.iso.datetime({"offset":true}).optional().describe('Last update date'),
-  "subscription": zod.string().nullish().describe('Agency subscription type. \*\*Private field\*\*: only visible if you have the appropriate access rights')
-}).describe('Real estate agency (business unit)')).optional()
+  "id": zod.coerce.number().nullish().describe('Unique ID of the agency'),
+  "name": zod.coerce.string().nullish().describe('Agency name'),
+  "address": zod.coerce.string().nullish().describe('Postal address'),
+  "zipcode": zod.coerce.string().nullish().describe('Postal code'),
+  "city": zod.coerce.string().nullish().describe('City'),
+  "country": zod.coerce.string().nullish().describe('ISO 3166-1 alpha-2 country code'),
+  "phone": zod.coerce.string().nullish().describe('Phone number with country code'),
+  "fax": zod.coerce.string().nullish().describe('Fax number with country code'),
+  "email": zod.coerce.string().nullish().describe('Agency contact email'),
+  "website": zod.coerce.string().nullish().describe('Agency website'),
+  "picture": zod.coerce.string().nullish().describe('URL of the agency logo'),
+  "created_at": zod.coerce.string().nullish().describe('Creation date'),
+  "updated_at": zod.coerce.string().nullish().describe('Last update date'),
+  "subscription": zod.coerce.string().nullish().describe('Agency subscription type. \*\*Private field\*\*: only visible if you have the appropriate access rights')
+}).describe('Real estate agency (business unit)')).nullish()
 }))
 
 
@@ -113,7 +113,7 @@ export const ListAgenciesResponse = zod.object({
  * @summary Retrieve the properties list
  */
 export const ListPropertiesParams = zod.object({
-  "agency_id": zod.number().describe('Unique ID of the agency')
+  "agency_id": zod.coerce.number().describe('Unique ID of the agency')
 })
 
 export const listPropertiesQueryLimitDefault = 1000;
@@ -122,12 +122,12 @@ export const listPropertiesQueryLimitMax = 1000;
 export const listPropertiesQueryOffsetDefault = 0;
 
 export const ListPropertiesQueryParams = zod.object({
-  "limit": zod.number().max(listPropertiesQueryLimitMax).default(listPropertiesQueryLimitDefault).describe('Number of records to return (max: 1000)'),
-  "offset": zod.number().default(listPropertiesQueryOffsetDefault).describe('Number of records to skip'),
-  "timestamp": zod.number().optional().describe('Returns properties created or updated since this UNIX timestamp'),
-  "step": zod.number().optional().describe('Filter by step → see catalog property_step'),
-  "status": zod.number().optional().describe('Filter by status → see catalog property_status'),
-  "group": zod.number().optional().describe('Filter by group → see catalog property_group')
+  "limit": zod.coerce.number().max(listPropertiesQueryLimitMax).default(listPropertiesQueryLimitDefault).describe('Number of records to return (max: 1000)'),
+  "offset": zod.coerce.number().default(listPropertiesQueryOffsetDefault).describe('Number of records to skip'),
+  "timestamp": zod.coerce.number().nullish().describe('Returns properties created or updated since this UNIX timestamp'),
+  "step": zod.coerce.number().nullish().describe('Filter by step → see catalog property_step'),
+  "status": zod.coerce.number().nullish().describe('Filter by status → see catalog property_status'),
+  "group": zod.coerce.number().nullish().describe('Filter by group → see catalog property_group')
 })
 
 export const listPropertiesResponseTwoPropertiesItemRankingMax = 5;
@@ -135,227 +135,227 @@ export const listPropertiesResponseTwoPropertiesItemRankingMax = 5;
 
 
 export const ListPropertiesResponse = zod.object({
-  "total_items": zod.number().optional().describe('Total number of items (regardless of pagination)'),
-  "timestamp": zod.number().optional().describe('UNIX timestamp of the most recent item in the list')
+  "total_items": zod.coerce.number().nullish().describe('Total number of items (regardless of pagination)'),
+  "timestamp": zod.coerce.number().nullish().describe('UNIX timestamp of the most recent item in the list')
 }).and(zod.object({
   "properties": zod.array(zod.object({
-  "id": zod.number().optional().describe('Unique ID of the property'),
-  "reference": zod.string().optional().describe('Human-readable reference of the property'),
-  "agency": zod.number().optional().describe('ID of the agency owning the property'),
+  "id": zod.coerce.number().nullish().describe('Unique ID of the property'),
+  "reference": zod.coerce.string().nullish().describe('Human-readable reference of the property'),
+  "agency": zod.coerce.number().nullish().describe('ID of the agency owning the property'),
   "user": zod.object({
-  "id": zod.number().optional(),
-  "agency": zod.number().optional().describe('Agency ID (may differ from the calling agency)'),
-  "active": zod.boolean().optional().describe('Whether the user is active'),
-  "firstname": zod.string().optional(),
-  "lastname": zod.string().optional(),
-  "email": zod.email().optional(),
-  "phone": zod.string().optional().describe('Phone number with country code'),
-  "fax": zod.string().nullish(),
-  "mobile": zod.string().nullish(),
-  "language": zod.string().optional().describe('ISO 639-1 language code'),
-  "group": zod.number().optional().describe('User group \/ profile'),
-  "birthday_at": zod.iso.date().nullish().describe('User\'s date of birth. \*\*Private field\*\*: only visible if you have the appropriate access rights'),
-  "timezone": zod.string().optional(),
-  "picture": zod.url().nullish().describe('Profile picture URL'),
-  "created_at": zod.iso.datetime({"offset":true}).optional(),
-  "updated_at": zod.iso.datetime({"offset":true}).optional()
-}).describe('Agency user \/ negotiator').optional().describe('Responsible negotiator'),
-  "step": zod.union([zod.literal(1),zod.literal(2),zod.literal(3),zod.literal(4)]).optional().describe('Main step of the property:\n- `1` = In progress\n- `2` = On hold\n- `3` = Completed\n- `4` = Deleted\n'),
-  "status": zod.union([zod.literal(1),zod.literal(20),zod.literal(21),zod.literal(22),zod.literal(24),zod.literal(25),zod.literal(27),zod.literal(28),zod.literal(29),zod.literal(30),zod.literal(31),zod.literal(32),zod.literal(33),zod.literal(34),zod.literal(35),zod.literal(39),zod.literal(40)]).optional().describe('Precise status of the property (sub-category of step):\n- `1` = In progress\n- `20` = Awaiting mandate\n- `21` = Expired mandate\n- `22` = Under offer \/ reservation\n- `24` = Under sale\/rental contract\n- `25` = Awaiting deed\/lease\n- `27` = Awaiting correction\n- `28` = Awaiting validation\n- `29` = Other\n- `30` = Sold\/rented by the agency\n- `31` = Sold\/rented by the owner\n- `32` = Sold\/rented by a competitor\n- `33` = Withdrawn by the agency\n- `34` = Withdrawn by the owner\n- `35` = Sale\/rental cancelled\n- `39` = Other\n- `40` = Delete this record\n'),
-  "group": zod.number().optional().describe('Database group → see catalog property_group'),
-  "parent": zod.number().nullish().describe('Parent property ID (e.g. apartment in a new development)'),
-  "ranking": zod.number().min(1).max(listPropertiesResponseTwoPropertiesItemRankingMax).optional().describe('Property rating from 1 to 5'),
-  "category": zod.union([zod.literal(1),zod.literal(2),zod.literal(3),zod.literal(4),zod.literal(5),zod.literal(6)]).optional().describe('Main category of the property:\n- `1` = Sale\n- `2` = Rental\n- `3` = Seasonal rental\n- `4` = New development\n- `5` = Life annuity\n- `6` = Auction\n'),
-  "subcategory": zod.number().optional().describe('Property sub-category → see catalog property_subcategory'),
-  "name": zod.string().nullish().describe('Property name'),
-  "type": zod.union([zod.literal(1),zod.literal(2),zod.literal(3),zod.literal(4),zod.literal(5),zod.literal(6),zod.literal(7),zod.literal(8),zod.literal(9),zod.literal(10)]).optional().describe('Type of real estate property:\n- `1` = Apartment\n- `2` = House\n- `3` = Land\n- `4` = Commercial\n- `5` = Garage \/ Parking\n- `6` = Building\n- `7` = Office\n- `8` = Boat\n- `9` = Business premises \/ Warehouses\n- `10` = Cellar \/ Box\n'),
-  "subtype": zod.union([zod.literal(1),zod.literal(2),zod.literal(3),zod.literal(4),zod.literal(5),zod.literal(6),zod.literal(7),zod.literal(8),zod.literal(9),zod.literal(10),zod.literal(11),zod.literal(12),zod.literal(13),zod.literal(14),zod.literal(15),zod.literal(16),zod.literal(17),zod.literal(18),zod.literal(19),zod.literal(20),zod.literal(21),zod.literal(22),zod.literal(23),zod.literal(24),zod.literal(25),zod.literal(26),zod.literal(27),zod.literal(28),zod.literal(29),zod.literal(30),zod.literal(31),zod.literal(32),zod.literal(33),zod.literal(34),zod.literal(35),zod.literal(36),zod.literal(37),zod.literal(38),zod.literal(39),zod.literal(40),zod.literal(41),zod.literal(42),zod.literal(43),zod.literal(44),zod.literal(45),zod.literal(46),zod.literal(47),zod.literal(48),zod.literal(49),zod.literal(50),zod.literal(51),zod.literal(52),zod.literal(53),zod.literal(54),zod.literal(55),zod.literal(56),zod.literal(57),zod.literal(58),zod.literal(59),zod.literal(60),zod.literal(61),zod.literal(62),zod.literal(63),zod.literal(64),zod.literal(65),zod.literal(66),zod.literal(67),zod.literal(68),zod.literal(69),zod.literal(70),zod.literal(71),zod.literal(72),zod.literal(73),zod.literal(74),zod.literal(77),zod.literal(78),zod.literal(79),zod.literal(80),zod.literal(81),zod.literal(82),zod.literal(83),zod.literal(84),zod.literal(85),zod.literal(87),zod.literal(88),zod.literal(89),zod.literal(90),zod.literal(103),zod.literal(104),zod.literal(105),zod.literal(110),zod.literal(111),zod.literal(112),zod.literal(113),zod.literal(114),zod.literal(115),zod.literal(116)]).optional().describe('Sous-type précis du bien :\n- `1` = Triplex, `2` = Terrain constructible, `3` = Terrain inconstructible\n- `4` = Penthouse, `5` = Appartement, `6` = Studio\n- `7` = Château, `8` = Commerce, `9` = Duplex, `10` = Manoir\n- `11` = Ferme, `12` = Loft, `13` = Maison de village, `14` = Villa\n- `15` = Appartement villa, `16` = Grange, `17` = Ruine, `18` = Maison\n- `19` = Propriété, `20` = Ensemble immobilier, `21` = Moulin, `22` = Garage\n- `23` = Fermette, `24` = Immeuble, `25` = Maison de ville, `26` = Mobile home\n- `27` = Chaumière, `28` = Chambre, `29` = Hangar, `30` = Mas\n- `31` = Local, `32` = Chalet, `33` = Local commercial, `34` = Fonds de commerce\n- `35` = Droit au bail, `36` = Bureau, `37` = Hôtel particulier, `38` = Gérance\n- `39` = Exploitation agricole, `40` = Cave, `41` = Entrepôt, `42` = Remise\n- `43` = Parking, `44` = Hôtel, `45` = Haras, `46` = Terrain, `47` = Bastide\n- `48` = Bastidon, `49` = Entreprise, `50` = Propriété viticole\n- `51` = Yacht, `52` = Péniche, `53` = Voilier, `54` = Catamaran\n- `55` = Domaine équestre, `56` = Maison d\'hôtes, `57` = Gîte, `58` = Riad\n- `59` = Box, `60` = Attique, `61` = Arcade, `62` = Boutique, `63` = Atelier\n- `64` = Shophouse, `65` = Borey, `66` = Condo, `67` = Usine\n- `68` = Appart\'hôtel, `69` = Villa jumelée, `70` = Maison de plain-pied\n- `71` = Maison jumelée, `72` = Bungalow, `73` = Maison de plage\n- `74` = Place de port, `77` = Île privée, `78` = Terrain résidentiel\n- `79` = Terrain commercial, `80` = Lotissement, `81` = Domaine de chasse\n- `82` = Bateau à moteur, `83` = Pavillon, `84` = Ranch, `85` = Lac\n- `87` = Atelier artisanal, `88` = Pavillon, `89` = Cellier, `90` = Grenier\n- `103` = Terrain agricole, `104` = Local et fonds de commerce\n- `105` = Bâtiment historique, `110` = Maisonette, `111` = Dépendance\n- `112` = Refuge, `113` = Appartement type maison, `114` = Appartement de plain-pied\n- `115` = Cabinet, `116` = Maison préfabriquée\n'),
+  "id": zod.coerce.number().nullish(),
+  "agency": zod.coerce.number().nullish().describe('Agency ID (may differ from the calling agency)'),
+  "active": zod.coerce.boolean().nullish().describe('Whether the user is active'),
+  "firstname": zod.coerce.string().nullish(),
+  "lastname": zod.coerce.string().nullish(),
+  "email": zod.coerce.string().nullish(),
+  "phone": zod.coerce.string().nullish().describe('Phone number with country code'),
+  "fax": zod.coerce.string().nullish(),
+  "mobile": zod.coerce.string().nullish(),
+  "language": zod.coerce.string().nullish().describe('ISO 639-1 language code'),
+  "group": zod.coerce.number().nullish().describe('User group \/ profile'),
+  "birthday_at": zod.coerce.string().nullish().describe('User\'s date of birth. \*\*Private field\*\*: only visible if you have the appropriate access rights'),
+  "timezone": zod.coerce.string().nullish(),
+  "picture": zod.coerce.string().nullish().describe('Profile picture URL'),
+  "created_at": zod.coerce.string().nullish(),
+  "updated_at": zod.coerce.string().nullish()
+}).describe('Agency user \/ negotiator').nullish().describe('Responsible negotiator'),
+  "step": zod.union([zod.literal(1),zod.literal(2),zod.literal(3),zod.literal(4)]).nullish().describe('Main step of the property:\n- `1` = In progress\n- `2` = On hold\n- `3` = Completed\n- `4` = Deleted\n'),
+  "status": zod.union([zod.literal(1),zod.literal(20),zod.literal(21),zod.literal(22),zod.literal(24),zod.literal(25),zod.literal(27),zod.literal(28),zod.literal(29),zod.literal(30),zod.literal(31),zod.literal(32),zod.literal(33),zod.literal(34),zod.literal(35),zod.literal(39),zod.literal(40)]).nullish().describe('Precise status of the property (sub-category of step):\n- `1` = In progress\n- `20` = Awaiting mandate\n- `21` = Expired mandate\n- `22` = Under offer \/ reservation\n- `24` = Under sale\/rental contract\n- `25` = Awaiting deed\/lease\n- `27` = Awaiting correction\n- `28` = Awaiting validation\n- `29` = Other\n- `30` = Sold\/rented by the agency\n- `31` = Sold\/rented by the owner\n- `32` = Sold\/rented by a competitor\n- `33` = Withdrawn by the agency\n- `34` = Withdrawn by the owner\n- `35` = Sale\/rental cancelled\n- `39` = Other\n- `40` = Delete this record\n'),
+  "group": zod.coerce.number().nullish().describe('Database group → see catalog property_group'),
+  "parent": zod.coerce.number().nullish().describe('Parent property ID (e.g. apartment in a new development)'),
+  "ranking": zod.coerce.number().min(1).max(listPropertiesResponseTwoPropertiesItemRankingMax).nullish().describe('Property rating from 1 to 5'),
+  "category": zod.union([zod.literal(1),zod.literal(2),zod.literal(3),zod.literal(4),zod.literal(5),zod.literal(6)]).nullish().describe('Main category of the property:\n- `1` = Sale\n- `2` = Rental\n- `3` = Seasonal rental\n- `4` = New development\n- `5` = Life annuity\n- `6` = Auction\n'),
+  "subcategory": zod.coerce.number().nullish().describe('Property sub-category → see catalog property_subcategory'),
+  "name": zod.coerce.string().nullish().describe('Property name'),
+  "type": zod.union([zod.literal(1),zod.literal(2),zod.literal(3),zod.literal(4),zod.literal(5),zod.literal(6),zod.literal(7),zod.literal(8),zod.literal(9),zod.literal(10)]).nullish().describe('Type of real estate property:\n- `1` = Apartment\n- `2` = House\n- `3` = Land\n- `4` = Commercial\n- `5` = Garage \/ Parking\n- `6` = Building\n- `7` = Office\n- `8` = Boat\n- `9` = Business premises \/ Warehouses\n- `10` = Cellar \/ Box\n'),
+  "subtype": zod.union([zod.literal(1),zod.literal(2),zod.literal(3),zod.literal(4),zod.literal(5),zod.literal(6),zod.literal(7),zod.literal(8),zod.literal(9),zod.literal(10),zod.literal(11),zod.literal(12),zod.literal(13),zod.literal(14),zod.literal(15),zod.literal(16),zod.literal(17),zod.literal(18),zod.literal(19),zod.literal(20),zod.literal(21),zod.literal(22),zod.literal(23),zod.literal(24),zod.literal(25),zod.literal(26),zod.literal(27),zod.literal(28),zod.literal(29),zod.literal(30),zod.literal(31),zod.literal(32),zod.literal(33),zod.literal(34),zod.literal(35),zod.literal(36),zod.literal(37),zod.literal(38),zod.literal(39),zod.literal(40),zod.literal(41),zod.literal(42),zod.literal(43),zod.literal(44),zod.literal(45),zod.literal(46),zod.literal(47),zod.literal(48),zod.literal(49),zod.literal(50),zod.literal(51),zod.literal(52),zod.literal(53),zod.literal(54),zod.literal(55),zod.literal(56),zod.literal(57),zod.literal(58),zod.literal(59),zod.literal(60),zod.literal(61),zod.literal(62),zod.literal(63),zod.literal(64),zod.literal(65),zod.literal(66),zod.literal(67),zod.literal(68),zod.literal(69),zod.literal(70),zod.literal(71),zod.literal(72),zod.literal(73),zod.literal(74),zod.literal(77),zod.literal(78),zod.literal(79),zod.literal(80),zod.literal(81),zod.literal(82),zod.literal(83),zod.literal(84),zod.literal(85),zod.literal(87),zod.literal(88),zod.literal(89),zod.literal(90),zod.literal(103),zod.literal(104),zod.literal(105),zod.literal(110),zod.literal(111),zod.literal(112),zod.literal(113),zod.literal(114),zod.literal(115),zod.literal(116)]).nullish().describe('Sous-type précis du bien :\n- `1` = Triplex, `2` = Terrain constructible, `3` = Terrain inconstructible\n- `4` = Penthouse, `5` = Appartement, `6` = Studio\n- `7` = Château, `8` = Commerce, `9` = Duplex, `10` = Manoir\n- `11` = Ferme, `12` = Loft, `13` = Maison de village, `14` = Villa\n- `15` = Appartement villa, `16` = Grange, `17` = Ruine, `18` = Maison\n- `19` = Propriété, `20` = Ensemble immobilier, `21` = Moulin, `22` = Garage\n- `23` = Fermette, `24` = Immeuble, `25` = Maison de ville, `26` = Mobile home\n- `27` = Chaumière, `28` = Chambre, `29` = Hangar, `30` = Mas\n- `31` = Local, `32` = Chalet, `33` = Local commercial, `34` = Fonds de commerce\n- `35` = Droit au bail, `36` = Bureau, `37` = Hôtel particulier, `38` = Gérance\n- `39` = Exploitation agricole, `40` = Cave, `41` = Entrepôt, `42` = Remise\n- `43` = Parking, `44` = Hôtel, `45` = Haras, `46` = Terrain, `47` = Bastide\n- `48` = Bastidon, `49` = Entreprise, `50` = Propriété viticole\n- `51` = Yacht, `52` = Péniche, `53` = Voilier, `54` = Catamaran\n- `55` = Domaine équestre, `56` = Maison d\'hôtes, `57` = Gîte, `58` = Riad\n- `59` = Box, `60` = Attique, `61` = Arcade, `62` = Boutique, `63` = Atelier\n- `64` = Shophouse, `65` = Borey, `66` = Condo, `67` = Usine\n- `68` = Appart\'hôtel, `69` = Villa jumelée, `70` = Maison de plain-pied\n- `71` = Maison jumelée, `72` = Bungalow, `73` = Maison de plage\n- `74` = Place de port, `77` = Île privée, `78` = Terrain résidentiel\n- `79` = Terrain commercial, `80` = Lotissement, `81` = Domaine de chasse\n- `82` = Bateau à moteur, `83` = Pavillon, `84` = Ranch, `85` = Lac\n- `87` = Atelier artisanal, `88` = Pavillon, `89` = Cellier, `90` = Grenier\n- `103` = Terrain agricole, `104` = Local et fonds de commerce\n- `105` = Bâtiment historique, `110` = Maisonette, `111` = Dépendance\n- `112` = Refuge, `113` = Appartement type maison, `114` = Appartement de plain-pied\n- `115` = Cabinet, `116` = Maison préfabriquée\n'),
   "agreement": zod.object({
-  "type": zod.number().optional().describe('Mandate type → see catalog property_agreement'),
-  "reference": zod.string().optional().describe('Mandate reference'),
-  "start_at": zod.iso.date().optional().describe('Mandate start date'),
-  "end_at": zod.iso.date().optional().describe('Mandate end date')
-}).optional().describe('Mandate information'),
-  "block_name": zod.string().nullish().describe('Building name or reference'),
-  "lot_reference": zod.string().nullish().describe('Lot reference'),
-  "cadastre_reference": zod.string().nullish().describe('Cadastral reference'),
-  "stairs_reference": zod.string().nullish().describe('Staircase reference'),
-  "address": zod.string().nullish().describe('Property address'),
-  "address_more": zod.string().nullish().describe('Additional address details'),
-  "publish_address": zod.boolean().optional().describe('Permission to publish the address'),
-  "country": zod.string().optional().describe('ISO 3166-1 alpha-2 country code'),
+  "type": zod.coerce.number().nullish().describe('Mandate type → see catalog property_agreement'),
+  "reference": zod.coerce.string().nullish().describe('Mandate reference'),
+  "start_at": zod.coerce.string().nullish().describe('Mandate start date'),
+  "end_at": zod.coerce.string().nullish().describe('Mandate end date')
+}).nullish().describe('Mandate information'),
+  "block_name": zod.coerce.string().nullish().describe('Building name or reference'),
+  "lot_reference": zod.coerce.string().nullish().describe('Lot reference'),
+  "cadastre_reference": zod.coerce.string().nullish().describe('Cadastral reference'),
+  "stairs_reference": zod.coerce.string().nullish().describe('Staircase reference'),
+  "address": zod.coerce.string().nullish().describe('Property address'),
+  "address_more": zod.coerce.string().nullish().describe('Additional address details'),
+  "publish_address": zod.coerce.boolean().nullish().describe('Permission to publish the address'),
+  "country": zod.coerce.string().nullish().describe('ISO 3166-1 alpha-2 country code'),
   "region": zod.object({
-  "id": zod.number().optional(),
-  "name": zod.string().optional()
+  "id": zod.coerce.number().nullish(),
+  "name": zod.coerce.string().nullish()
 }).nullish(),
   "city": zod.object({
-  "id": zod.number().optional(),
-  "name": zod.string().optional(),
-  "zipcode": zod.string().optional()
-}).optional(),
-  "district": zod.object({
-  "id": zod.number().optional(),
-  "name": zod.string().optional()
+  "id": zod.coerce.number().nullish(),
+  "name": zod.coerce.string().nullish(),
+  "zipcode": zod.coerce.string().nullish()
 }).nullish(),
-  "longitude": zod.number().optional().describe('Longitude GPS'),
-  "latitude": zod.number().optional().describe('Latitude GPS'),
-  "radius": zod.number().nullish().describe('Radius in meters (0 if publish_address=true)'),
-  "altitude": zod.number().nullish().describe('Altitude in meters'),
+  "district": zod.object({
+  "id": zod.coerce.number().nullish(),
+  "name": zod.coerce.string().nullish()
+}).nullish(),
+  "longitude": zod.coerce.number().nullish().describe('Longitude GPS'),
+  "latitude": zod.coerce.number().nullish().describe('Latitude GPS'),
+  "radius": zod.coerce.number().nullish().describe('Radius in meters (0 if publish_address=true)'),
+  "altitude": zod.coerce.number().nullish().describe('Altitude in meters'),
   "area": zod.object({
-  "unit": zod.number().optional().describe('Area unit ID → see catalog unit_area'),
-  "value": zod.number().optional().describe('Main area'),
-  "total": zod.number().nullish().describe('Total area (must be >= value)'),
-  "weighted": zod.number().nullish().describe('Weighted area')
-}).optional().describe('Property area'),
-  "rooms": zod.number().optional().describe('Number of rooms (can be decimal)'),
-  "bedrooms": zod.number().optional().describe('Number of bedrooms'),
-  "sleeps": zod.number().nullish().describe('Number of sleeping places'),
+  "unit": zod.coerce.number().nullish().describe('Area unit ID → see catalog unit_area'),
+  "value": zod.coerce.number().nullish().describe('Main area'),
+  "total": zod.coerce.number().nullish().describe('Total area (must be >= value)'),
+  "weighted": zod.coerce.number().nullish().describe('Weighted area')
+}).nullish().describe('Property area'),
+  "rooms": zod.coerce.number().nullish().describe('Number of rooms (can be decimal)'),
+  "bedrooms": zod.coerce.number().nullish().describe('Number of bedrooms'),
+  "sleeps": zod.coerce.number().nullish().describe('Number of sleeping places'),
   "price": zod.object({
-  "value": zod.number().optional().describe('Prix'),
-  "max": zod.number().nullish().describe('Maximum price'),
-  "fees": zod.number().nullish().describe('Fees'),
-  "period": zod.number().nullish().describe('Rental frequency → see catalog property_period'),
-  "hide": zod.boolean().optional().describe('Hide the price'),
-  "inventory": zod.number().nullish().describe('Inventory fees (rental)'),
-  "deposit": zod.number().nullish().describe('Security deposit'),
-  "currency": zod.string().optional().describe('Currency ISO 4217'),
-  "commission": zod.number().nullish().describe('Customer commission'),
-  "guarantee": zod.number().nullish().describe('Guarantee'),
-  "transfer_tax": zod.number().nullish().describe('Notary fees and transfer taxes'),
-  "contribution": zod.number().nullish().describe('Initial contribution (life annuity)'),
-  "pension": zod.number().nullish().describe('Life annuity'),
-  "tenant": zod.number().nullish().describe('Current tenant rent'),
-  "vat": zod.boolean().nullish().describe('Price including VAT'),
-  "sold": zod.number().nullish().describe('Final sale price'),
-  "sold_at": zod.iso.date().nullish().describe('Sale signing date'),
-  "commission_owner": zod.number().nullish().describe('Commission for the owner. \*\*Private field\*\*: only visible if you have the appropriate access rights'),
-  "commission_customer": zod.number().nullish().describe('Commission for the customer. \*\*Private field\*\*: only visible if you have the appropriate access rights'),
-  "net_seller": zod.number().nullish().describe('Net seller amount after deduction of commissions. \*\*Private field\*\*: only visible if you have the appropriate access rights'),
+  "value": zod.coerce.number().nullish().describe('Prix'),
+  "max": zod.coerce.number().nullish().describe('Maximum price'),
+  "fees": zod.coerce.number().nullish().describe('Fees'),
+  "period": zod.coerce.number().nullish().describe('Rental frequency → see catalog property_period'),
+  "hide": zod.coerce.boolean().nullish().describe('Hide the price'),
+  "inventory": zod.coerce.number().nullish().describe('Inventory fees (rental)'),
+  "deposit": zod.coerce.number().nullish().describe('Security deposit'),
+  "currency": zod.coerce.string().nullish().describe('Currency ISO 4217'),
+  "commission": zod.coerce.number().nullish().describe('Customer commission'),
+  "guarantee": zod.coerce.number().nullish().describe('Guarantee'),
+  "transfer_tax": zod.coerce.number().nullish().describe('Notary fees and transfer taxes'),
+  "contribution": zod.coerce.number().nullish().describe('Initial contribution (life annuity)'),
+  "pension": zod.coerce.number().nullish().describe('Life annuity'),
+  "tenant": zod.coerce.number().nullish().describe('Current tenant rent'),
+  "vat": zod.coerce.boolean().nullish().describe('Price including VAT'),
+  "sold": zod.coerce.number().nullish().describe('Final sale price'),
+  "sold_at": zod.coerce.string().nullish().describe('Sale signing date'),
+  "commission_owner": zod.coerce.number().nullish().describe('Commission for the owner. \*\*Private field\*\*: only visible if you have the appropriate access rights'),
+  "commission_customer": zod.coerce.number().nullish().describe('Commission for the customer. \*\*Private field\*\*: only visible if you have the appropriate access rights'),
+  "net_seller": zod.coerce.number().nullish().describe('Net seller amount after deduction of commissions. \*\*Private field\*\*: only visible if you have the appropriate access rights'),
   "estimation": zod.object({
-  "min": zod.number().nullish().describe('Minimum estimation'),
-  "max": zod.number().nullish().describe('Maximum estimation')
+  "min": zod.coerce.number().nullish().describe('Minimum estimation'),
+  "max": zod.coerce.number().nullish().describe('Maximum estimation')
 }).nullish().describe('Price estimation. \*\*Private field\*\*: only visible if you have the appropriate access rights'),
-  "negotiable": zod.number().nullish().describe('Negotiable price value. \*\*Private field\*\*: only visible if you have the appropriate access rights')
-}).optional().describe('Property price'),
-  "owner": zod.number().nullish().describe('Owner reference (linked to contacts endpoint). \*\*Private field\*\*: only visible if you have the appropriate access rights'),
+  "negotiable": zod.coerce.number().nullish().describe('Negotiable price value. \*\*Private field\*\*: only visible if you have the appropriate access rights')
+}).nullish().describe('Property price'),
+  "owner": zod.coerce.number().nullish().describe('Owner reference (linked to contacts endpoint). \*\*Private field\*\*: only visible if you have the appropriate access rights'),
   "visit": zod.object({
-  "contact": zod.number().nullish().describe('Contact for visiting (reference linked to contacts endpoint)'),
-  "comment": zod.string().nullish().describe('Visit instructions')
+  "contact": zod.coerce.number().nullish().describe('Contact for visiting (reference linked to contacts endpoint)'),
+  "comment": zod.coerce.string().nullish().describe('Visit instructions')
 }).nullish().describe('Visit information. \*\*Private field\*\*: only visible if you have the appropriate access rights'),
   "exchanges": zod.array(zod.looseObject({
 
-})).optional().describe('List of the portals to publish. \*\*Private field\*\*: only visible if you have the appropriate access rights'),
-  "status_comment": zod.string().nullish().describe('Status description. \*\*Private field\*\*: only visible if you have the appropriate access rights'),
+})).nullish().describe('List of the portals to publish. \*\*Private field\*\*: only visible if you have the appropriate access rights'),
+  "status_comment": zod.coerce.string().nullish().describe('Status description. \*\*Private field\*\*: only visible if you have the appropriate access rights'),
   "logs": zod.array(zod.object({
-  "field": zod.string().optional().describe('Field updated'),
-  "value": zod.string().optional().describe('New value'),
-  "date": zod.iso.datetime({"offset":true}).optional().describe('Date of the update')
-})).optional().describe('Modification history. \*\*Private field\*\*: only visible if you have the appropriate access rights'),
+  "field": zod.coerce.string().nullish().describe('Field updated'),
+  "value": zod.coerce.string().nullish().describe('New value'),
+  "date": zod.coerce.string().nullish().describe('Date of the update')
+})).nullish().describe('Modification history. \*\*Private field\*\*: only visible if you have the appropriate access rights'),
   "residence": zod.object({
-  "id": zod.number().nullish(),
-  "type": zod.number().optional().describe('Residence type → see catalog property_building'),
-  "fees": zod.number().nullish().describe('Monthly charges'),
-  "period": zod.number().nullish().describe('Charge frequency → see catalog property_period'),
-  "lots": zod.number().nullish().describe('Number of lots')
+  "id": zod.coerce.number().nullish(),
+  "type": zod.coerce.number().nullish().describe('Residence type → see catalog property_building'),
+  "fees": zod.coerce.number().nullish().describe('Monthly charges'),
+  "period": zod.coerce.number().nullish().describe('Charge frequency → see catalog property_period'),
+  "lots": zod.coerce.number().nullish().describe('Number of lots')
 }).nullish().describe('Residence \/ building'),
   "view": zod.object({
-  "type": zod.number().optional().describe('View type → see catalog property_view_type'),
-  "landscape": zod.array(zod.number()).optional().describe('Landscapes → see catalog property_view_landscape')
+  "type": zod.coerce.number().nullish().describe('View type → see catalog property_view_type'),
+  "landscape": zod.array(zod.coerce.number()).nullish().describe('Landscapes → see catalog property_view_landscape')
 }).nullish(),
   "construction": zod.object({
-  "method": zod.array(zod.number()).optional().describe('Construction method → see catalog property_construction_method'),
-  "construction_year": zod.number().nullish().describe('Construction year'),
-  "construction_step": zod.number().nullish().describe('Construction stage → see catalog construction_step'),
-  "renovation_year": zod.number().nullish().describe('Renovation year')
+  "method": zod.array(zod.coerce.number()).nullish().describe('Construction method → see catalog property_construction_method'),
+  "construction_year": zod.coerce.number().nullish().describe('Construction year'),
+  "construction_step": zod.coerce.number().nullish().describe('Construction stage → see catalog construction_step'),
+  "renovation_year": zod.coerce.number().nullish().describe('Renovation year')
 }).nullish(),
   "floor": zod.object({
-  "type": zod.number().optional().describe('Floor type → see catalog property_floor'),
-  "value": zod.number().optional().describe('Floor number (0=ground, 1=first...)'),
-  "levels": zod.number().nullish().describe('Levels of the property in the building'),
-  "floors": zod.number().nullish().describe('Total number of floors in the building')
+  "type": zod.coerce.number().nullish().describe('Floor type → see catalog property_floor'),
+  "value": zod.coerce.number().nullish().describe('Floor number (0=ground, 1=first...)'),
+  "levels": zod.coerce.number().nullish().describe('Levels of the property in the building'),
+  "floors": zod.coerce.number().nullish().describe('Total number of floors in the building')
 }).nullish(),
   "heating": zod.object({
-  "device": zod.number().nullish().describe('Heating device → see catalog property_heating_device'),
-  "access": zod.number().optional().describe('Heating access → see catalog property_heating_access'),
-  "type": zod.number().optional().describe('Heating type → see catalog property_heating_type')
+  "device": zod.coerce.number().nullish().describe('Heating device → see catalog property_heating_device'),
+  "access": zod.coerce.number().nullish().describe('Heating access → see catalog property_heating_access'),
+  "type": zod.coerce.number().nullish().describe('Heating type → see catalog property_heating_type')
 }).nullish(),
   "water": zod.object({
-  "hot_device": zod.number().nullish().describe('Hot water device → see catalog property_hot_water_device'),
-  "hot_access": zod.number().nullish().describe('Hot water access → see catalog property_hot_water_access'),
-  "waste": zod.number().nullish().describe('Waste water type → see catalog property_waste_water')
+  "hot_device": zod.coerce.number().nullish().describe('Hot water device → see catalog property_hot_water_device'),
+  "hot_access": zod.coerce.number().nullish().describe('Hot water access → see catalog property_hot_water_access'),
+  "waste": zod.coerce.number().nullish().describe('Waste water type → see catalog property_waste_water')
 }).nullish(),
-  "condition": zod.number().nullish().describe('Property condition → see catalog property_condition'),
-  "standing": zod.number().nullish().describe('Standing → see catalog property_standing'),
+  "condition": zod.coerce.number().nullish().describe('Property condition → see catalog property_condition'),
+  "standing": zod.coerce.number().nullish().describe('Standing → see catalog property_standing'),
   "style": zod.object({
-  "name": zod.string().optional()
+  "name": zod.coerce.string().nullish()
 }).nullish(),
-  "facades": zod.number().nullish().describe('Number of facades'),
-  "url": zod.url().nullish().describe('Dedicated property website'),
-  "availability": zod.number().nullish().describe('Availability → see catalog property_availability'),
-  "available_at": zod.iso.date().nullish().describe('Availability date (free rental)'),
-  "delivered_at": zod.iso.date().nullish().describe('Delivery date (new development)'),
-  "activities": zod.array(zod.number()).optional().describe('Activities → see catalog property_activity'),
-  "orientations": zod.array(zod.number()).optional().describe('Orientations → see catalog property_orientation'),
-  "services": zod.array(zod.number()).optional().describe('Services → see catalog property_service'),
-  "proximities": zod.array(zod.number()).optional().describe('Proximities → see catalog property_proximity'),
-  "tags": zod.array(zod.number()).optional().describe('Tags → see catalog tags'),
+  "facades": zod.coerce.number().nullish().describe('Number of facades'),
+  "url": zod.coerce.string().nullish().describe('Dedicated property website'),
+  "availability": zod.coerce.number().nullish().describe('Availability → see catalog property_availability'),
+  "available_at": zod.coerce.string().nullish().describe('Availability date (free rental)'),
+  "delivered_at": zod.coerce.string().nullish().describe('Delivery date (new development)'),
+  "activities": zod.array(zod.coerce.number()).nullish().describe('Activities → see catalog property_activity'),
+  "orientations": zod.array(zod.coerce.number()).nullish().describe('Orientations → see catalog property_orientation'),
+  "services": zod.array(zod.coerce.number()).nullish().describe('Services → see catalog property_service'),
+  "proximities": zod.array(zod.coerce.number()).nullish().describe('Proximities → see catalog property_proximity'),
+  "tags": zod.array(zod.coerce.number()).nullish().describe('Tags → see catalog tags'),
   "tags_customized": zod.array(zod.object({
-  "comment": zod.string().optional()
-})).optional().describe('Agency customized tags'),
+  "comment": zod.coerce.string().nullish()
+})).nullish().describe('Agency customized tags'),
   "pictures": zod.array(zod.object({
-  "id": zod.number().optional(),
-  "rank": zod.number().optional().describe('Display order'),
-  "url": zod.url().optional(),
-  "width_max": zod.number().optional().describe('Max width in pixels'),
-  "height_max": zod.number().optional().describe('Max height in pixels'),
+  "id": zod.coerce.number().nullish(),
+  "rank": zod.coerce.number().nullish().describe('Display order'),
+  "url": zod.coerce.string().nullish(),
+  "width_max": zod.coerce.number().nullish().describe('Max width in pixels'),
+  "height_max": zod.coerce.number().nullish().describe('Max height in pixels'),
   "comments": zod.array(zod.object({
-  "language": zod.string().optional(),
-  "comment": zod.string().optional()
-})).optional()
-})).optional().describe('Property photos. To add a photo, use POST \/properties\/{property_id}\/pictures'),
+  "language": zod.coerce.string().nullish(),
+  "comment": zod.coerce.string().nullish()
+})).nullish()
+})).nullish().describe('Property photos. To add a photo, use POST \/properties\/{property_id}\/pictures'),
   "medias": zod.array(zod.object({
-  "type": zod.string().optional().describe('Media type (video, html...)'),
-  "value": zod.string().optional().describe('Media content or link')
-})).optional().describe('Property media (videos, virtual tours...). To add a media, use POST \/properties\/{property_id}\/medias'),
+  "type": zod.coerce.string().nullish().describe('Media type (video, html...)'),
+  "value": zod.coerce.string().nullish().describe('Media content or link')
+})).nullish().describe('Property media (videos, virtual tours...). To add a media, use POST \/properties\/{property_id}\/medias'),
   "comments": zod.array(zod.object({
-  "language": zod.string().optional().describe('ISO 639-1 language code'),
-  "title": zod.string().optional(),
-  "subtitle": zod.string().nullish(),
-  "hook": zod.string().nullish(),
-  "comment": zod.string().nullish().describe('Short description'),
-  "comment_full": zod.string().nullish().describe('Full description')
-})).optional().describe('Multilingual descriptions of the property. To add\/update a description, use POST \/properties\/{property_id}\/comments'),
+  "language": zod.coerce.string().nullish().describe('ISO 639-1 language code'),
+  "title": zod.coerce.string().nullish(),
+  "subtitle": zod.coerce.string().nullish(),
+  "hook": zod.coerce.string().nullish(),
+  "comment": zod.coerce.string().nullish().describe('Short description'),
+  "comment_full": zod.coerce.string().nullish().describe('Full description')
+})).nullish().describe('Multilingual descriptions of the property. To add\/update a description, use POST \/properties\/{property_id}\/comments'),
   "areas": zod.array(zod.object({
-  "type": zod.string().optional().describe('Room type → see catalog property_areas'),
-  "number": zod.string().optional().describe('Quantity'),
-  "area": zod.number().nullish().describe('Room area'),
-  "flooring": zod.string().nullish().describe('Flooring type → see catalog property_flooring'),
-  "ceiling_height": zod.number().nullish().describe('Ceiling height'),
+  "type": zod.coerce.string().nullish().describe('Room type → see catalog property_areas'),
+  "number": zod.coerce.string().nullish().describe('Quantity'),
+  "area": zod.coerce.number().nullish().describe('Room area'),
+  "flooring": zod.coerce.string().nullish().describe('Flooring type → see catalog property_flooring'),
+  "ceiling_height": zod.coerce.number().nullish().describe('Ceiling height'),
   "floor": zod.object({
-  "id": zod.number().optional(),
-  "value": zod.number().nullish()
+  "id": zod.coerce.number().nullish(),
+  "value": zod.coerce.number().nullish()
 }).nullish(),
-  "orientations": zod.array(zod.number()).optional(),
+  "orientations": zod.array(zod.coerce.number()).nullish(),
   "comments": zod.array(zod.object({
-  "language": zod.string().optional(),
-  "comment": zod.string().optional()
-})).optional()
-})).optional().describe('Room and area details'),
+  "language": zod.coerce.string().nullish(),
+  "comment": zod.coerce.string().nullish()
+})).nullish()
+})).nullish().describe('Room and area details'),
   "regulations": zod.array(zod.object({
-  "type": zod.number().optional().describe('Regulation type → see catalog property_regulation'),
-  "value": zod.string().nullish().describe('Diagnostic value'),
-  "date": zod.iso.date().nullish().describe('Diagnostic date')
-})).optional().describe('Diagnostics and regulations (energy rating, asbestos...)'),
+  "type": zod.coerce.number().nullish().describe('Regulation type → see catalog property_regulation'),
+  "value": zod.coerce.string().nullish().describe('Diagnostic value'),
+  "date": zod.coerce.string().nullish().describe('Diagnostic date')
+})).nullish().describe('Diagnostics and regulations (energy rating, asbestos...)'),
   "financial": zod.array(zod.object({
-  "type": zod.number().optional().describe('Charge\/revenue type → see catalog property_financial'),
-  "amount": zod.number().optional().describe('Amount in the property currency'),
-  "year": zod.number().optional().describe('Reference year')
-})).optional().describe('Financial charges and revenues'),
-  "filling_rate": zod.number().nullish().describe('Filling rate. \*\*Private field\*\*: only visible if you have the appropriate access rights'),
-  "private_comment": zod.string().nullish().describe('Private description (not published). \*\*Private field\*\*: only visible if you have the appropriate access rights'),
-  "created_at": zod.iso.datetime({"offset":true}).optional().describe('Creation date. Format returned by the API: \'YYYY-MM-DD HH:MM:SS\''),
-  "updated_at": zod.iso.datetime({"offset":true}).optional().describe('Last update date. Format returned by the API: \'YYYY-MM-DD HH:MM:SS\'')
-}).describe('Complete property object returned for reading (GET) - source: official Apimo documentation')).optional()
+  "type": zod.coerce.number().nullish().describe('Charge\/revenue type → see catalog property_financial'),
+  "amount": zod.coerce.number().nullish().describe('Amount in the property currency'),
+  "year": zod.coerce.number().nullish().describe('Reference year')
+})).nullish().describe('Financial charges and revenues'),
+  "filling_rate": zod.coerce.number().nullish().describe('Filling rate. \*\*Private field\*\*: only visible if you have the appropriate access rights'),
+  "private_comment": zod.coerce.string().nullish().describe('Private description (not published). \*\*Private field\*\*: only visible if you have the appropriate access rights'),
+  "created_at": zod.coerce.string().nullish().describe('Creation date. Format returned by the API: \'YYYY-MM-DD HH:MM:SS\''),
+  "updated_at": zod.coerce.string().nullish().describe('Last update date. Format returned by the API: \'YYYY-MM-DD HH:MM:SS\'')
+}).describe('Complete property object returned for reading (GET) - source: official Apimo documentation')).nullish()
 }))
 
 
@@ -363,7 +363,7 @@ export const ListPropertiesResponse = zod.object({
  * @summary Create a new property
  */
 export const CreatePropertyParams = zod.object({
-  "agency_id": zod.number()
+  "agency_id": zod.coerce.number()
 })
 
 export const createPropertyBodyOneRankingMax = 5;
@@ -371,131 +371,131 @@ export const createPropertyBodyOneRankingMax = 5;
 
 
 export const CreatePropertyBody = zod.object({
-  "reference": zod.string().describe('Your unique identifier for this property. \*\*Required on creation (POST)\*\*'),
-  "user": zod.number().describe('ID of the user. \*\*Required on creation (POST)\*\*'),
-  "step": zod.number().optional().describe('Main step (in progress, on hold...) → see catalog property_step'),
-  "status": zod.number().optional().describe('Property status (sub-category of step) → see catalog property_status'),
-  "group": zod.number().optional().describe('Database group → see catalog property_group'),
-  "parent": zod.number().nullish().describe('Parent property ID (e.g. apartment in a new development)'),
-  "ranking": zod.number().min(1).max(createPropertyBodyOneRankingMax).optional().describe('Property rating from 1 to 5'),
-  "category": zod.number().optional().describe('Property category (sale, rental...) → see catalog property_category'),
-  "subcategory": zod.number().optional().describe('Property sub-category → see catalog property_subcategory'),
-  "name": zod.string().nullish().describe('Property name'),
-  "type": zod.number().optional().describe('Property type (apartment, house...) → see catalog property_type'),
-  "subtype": zod.number().optional().describe('Property subtype (studio, villa...) → see catalog property_subtype'),
+  "reference": zod.coerce.string().describe('Your unique identifier for this property. \*\*Required on creation (POST)\*\*'),
+  "user": zod.coerce.number().describe('ID of the user. \*\*Required on creation (POST)\*\*'),
+  "step": zod.coerce.number().nullish().describe('Main step (in progress, on hold...) → see catalog property_step'),
+  "status": zod.coerce.number().nullish().describe('Property status (sub-category of step) → see catalog property_status'),
+  "group": zod.coerce.number().nullish().describe('Database group → see catalog property_group'),
+  "parent": zod.coerce.number().nullish().describe('Parent property ID (e.g. apartment in a new development)'),
+  "ranking": zod.coerce.number().min(1).max(createPropertyBodyOneRankingMax).nullish().describe('Property rating from 1 to 5'),
+  "category": zod.coerce.number().nullish().describe('Property category (sale, rental...) → see catalog property_category'),
+  "subcategory": zod.coerce.number().nullish().describe('Property sub-category → see catalog property_subcategory'),
+  "name": zod.coerce.string().nullish().describe('Property name'),
+  "type": zod.coerce.number().nullish().describe('Property type (apartment, house...) → see catalog property_type'),
+  "subtype": zod.coerce.number().nullish().describe('Property subtype (studio, villa...) → see catalog property_subtype'),
   "agreement": zod.object({
-  "type": zod.number().optional().describe('Mandate type → see catalog property_agreement'),
-  "reference": zod.string().optional().describe('Human-readable mandate reference'),
-  "start_at": zod.iso.date().optional().describe('Mandate start date'),
-  "end_at": zod.iso.date().optional().describe('Mandate end date')
-}).optional().describe('Mandate information'),
-  "publish_address": zod.boolean().optional().describe('Permission to publish the address details'),
-  "address": zod.string().nullish().describe('Address, street name'),
-  "address_more": zod.string().nullish().describe('Additional address details'),
-  "city": zod.string().optional().describe('Unique ID of the city - or - name of the city'),
-  "zipcode": zod.string().optional().describe('Postal code du bien'),
-  "district": zod.string().nullish().describe('Unique ID of the district - or - name of the district'),
-  "country": zod.string().optional().describe('ISO 3166-1 alpha-2 country code'),
-  "longitude": zod.number().optional().describe('Longitude GPS'),
-  "latitude": zod.number().optional().describe('Latitude GPS'),
+  "type": zod.coerce.number().nullish().describe('Mandate type → see catalog property_agreement'),
+  "reference": zod.coerce.string().nullish().describe('Human-readable mandate reference'),
+  "start_at": zod.coerce.string().nullish().describe('Mandate start date'),
+  "end_at": zod.coerce.string().nullish().describe('Mandate end date')
+}).nullish().describe('Mandate information'),
+  "publish_address": zod.coerce.boolean().nullish().describe('Permission to publish the address details'),
+  "address": zod.coerce.string().nullish().describe('Address, street name'),
+  "address_more": zod.coerce.string().nullish().describe('Additional address details'),
+  "city": zod.coerce.string().nullish().describe('Unique ID of the city - or - name of the city'),
+  "zipcode": zod.coerce.string().nullish().describe('Postal code du bien'),
+  "district": zod.coerce.string().nullish().describe('Unique ID of the district - or - name of the district'),
+  "country": zod.coerce.string().nullish().describe('ISO 3166-1 alpha-2 country code'),
+  "longitude": zod.coerce.number().nullish().describe('Longitude GPS'),
+  "latitude": zod.coerce.number().nullish().describe('Latitude GPS'),
   "area": zod.object({
-  "unit": zod.number().optional().describe('Area unit ID → see catalog unit_area'),
-  "value": zod.number().optional().describe('Decimal value of the area'),
-  "total": zod.number().nullish().describe('Total area (must be greater than value)'),
-  "weighted": zod.number().nullish().describe('Weighted area')
-}).optional().describe('Property area'),
-  "rooms": zod.number().optional().describe('Number of rooms (can be decimal depending on the country)'),
-  "sleeps": zod.number().nullish().describe('Number of sleeping places'),
+  "unit": zod.coerce.number().nullish().describe('Area unit ID → see catalog unit_area'),
+  "value": zod.coerce.number().nullish().describe('Decimal value of the area'),
+  "total": zod.coerce.number().nullish().describe('Total area (must be greater than value)'),
+  "weighted": zod.coerce.number().nullish().describe('Weighted area')
+}).nullish().describe('Property area'),
+  "rooms": zod.coerce.number().nullish().describe('Number of rooms (can be decimal depending on the country)'),
+  "sleeps": zod.coerce.number().nullish().describe('Number of sleeping places'),
   "price": zod.object({
-  "value": zod.number().optional().describe('Value of the price'),
-  "max": zod.number().nullish().describe('Max value of the price'),
-  "fees": zod.number().nullish().describe('Value of the rental fees'),
-  "unit": zod.number().optional().describe('Area unit ID → see catalog unit_area'),
-  "period": zod.number().nullish().describe('Rental frequency → see catalog property_period'),
-  "hide": zod.boolean().optional().describe('Hide the price'),
-  "inventory": zod.number().nullish().describe('Inventory fees (in case of rental)'),
-  "deposit": zod.number().nullish().describe('Security deposit pour le client'),
-  "currency": zod.string().optional().describe('Currency ISO 4217'),
-  "commission_owner": zod.number().nullish().describe('Commission for the owner'),
-  "commission_customer": zod.number().nullish().describe('Commission for the customer'),
-  "contribution": zod.number().nullish().describe('Value of the initial contribution (life annuity)'),
-  "pension": zod.number().nullish().describe('Value of the pension (life annuity)'),
-  "tenant": zod.number().nullish().describe('Value of the current rental'),
-  "sold": zod.number().nullish().describe('Final price in case of sale'),
-  "sold_at": zod.iso.date().nullish().describe('Date of the contract in case of sale'),
+  "value": zod.coerce.number().nullish().describe('Value of the price'),
+  "max": zod.coerce.number().nullish().describe('Max value of the price'),
+  "fees": zod.coerce.number().nullish().describe('Value of the rental fees'),
+  "unit": zod.coerce.number().nullish().describe('Area unit ID → see catalog unit_area'),
+  "period": zod.coerce.number().nullish().describe('Rental frequency → see catalog property_period'),
+  "hide": zod.coerce.boolean().nullish().describe('Hide the price'),
+  "inventory": zod.coerce.number().nullish().describe('Inventory fees (in case of rental)'),
+  "deposit": zod.coerce.number().nullish().describe('Security deposit pour le client'),
+  "currency": zod.coerce.string().nullish().describe('Currency ISO 4217'),
+  "commission_owner": zod.coerce.number().nullish().describe('Commission for the owner'),
+  "commission_customer": zod.coerce.number().nullish().describe('Commission for the customer'),
+  "contribution": zod.coerce.number().nullish().describe('Value of the initial contribution (life annuity)'),
+  "pension": zod.coerce.number().nullish().describe('Value of the pension (life annuity)'),
+  "tenant": zod.coerce.number().nullish().describe('Value of the current rental'),
+  "sold": zod.coerce.number().nullish().describe('Final price in case of sale'),
+  "sold_at": zod.coerce.string().nullish().describe('Date of the contract in case of sale'),
   "estimation": zod.object({
-  "min": zod.number().nullish().describe('Minimum estimation'),
-  "max": zod.number().nullish().describe('Maximum estimation')
+  "min": zod.coerce.number().nullish().describe('Minimum estimation'),
+  "max": zod.coerce.number().nullish().describe('Maximum estimation')
 }).nullish().describe('Price estimation'),
-  "negotiable": zod.number().nullish().describe('Negotiable price value')
-}).optional().describe('Property price'),
-  "owner": zod.number().nullish().describe('Unique ID of the contact (owner)'),
+  "negotiable": zod.coerce.number().nullish().describe('Negotiable price value')
+}).nullish().describe('Property price'),
+  "owner": zod.coerce.number().nullish().describe('Unique ID of the contact (owner)'),
   "view": zod.object({
-  "type": zod.number().optional().describe('View type → see catalog property_view_type'),
-  "landscape": zod.array(zod.number()).optional().describe('Array of landscapes → see catalog property_view_landscape')
+  "type": zod.coerce.number().nullish().describe('View type → see catalog property_view_type'),
+  "landscape": zod.array(zod.coerce.number()).nullish().describe('Array of landscapes → see catalog property_view_landscape')
 }).nullish(),
   "construction": zod.object({
-  "method": zod.array(zod.number()).optional().describe('Array of construction methods → see catalog property_construction_method'),
-  "construction_year": zod.number().nullish().describe('Construction year'),
-  "renovation_year": zod.number().nullish().describe('Renovation year')
+  "method": zod.array(zod.coerce.number()).nullish().describe('Array of construction methods → see catalog property_construction_method'),
+  "construction_year": zod.coerce.number().nullish().describe('Construction year'),
+  "renovation_year": zod.coerce.number().nullish().describe('Renovation year')
 }).nullish(),
   "floor": zod.object({
-  "type": zod.number().optional().describe('Floor type → see catalog property_floor'),
-  "levels": zod.number().nullish().describe('Number of levels of the property in the building'),
-  "floors": zod.number().nullish().describe('Number of floors in the building')
+  "type": zod.coerce.number().nullish().describe('Floor type → see catalog property_floor'),
+  "levels": zod.coerce.number().nullish().describe('Number of levels of the property in the building'),
+  "floors": zod.coerce.number().nullish().describe('Number of floors in the building')
 }).nullish(),
   "heating": zod.object({
-  "device": zod.number().nullish().describe('Heating device → see catalog property_heating_device'),
-  "access": zod.number().optional().describe('Heating access → see catalog property_heating_access'),
-  "type": zod.number().optional().describe('Heating type → see catalog property_heating_type')
+  "device": zod.coerce.number().nullish().describe('Heating device → see catalog property_heating_device'),
+  "access": zod.coerce.number().nullish().describe('Heating access → see catalog property_heating_access'),
+  "type": zod.coerce.number().nullish().describe('Heating type → see catalog property_heating_type')
 }).nullish(),
   "water": zod.object({
-  "hot_device": zod.number().nullish().describe('Hot water device → see catalog property_hot_water_device'),
-  "hot_access": zod.number().nullish().describe('Hot water access → see catalog property_hot_water_access'),
-  "waste": zod.number().nullish().describe('Waste water type → see catalog property_waste_water')
+  "hot_device": zod.coerce.number().nullish().describe('Hot water device → see catalog property_hot_water_device'),
+  "hot_access": zod.coerce.number().nullish().describe('Hot water access → see catalog property_hot_water_access'),
+  "waste": zod.coerce.number().nullish().describe('Waste water type → see catalog property_waste_water')
 }).nullish(),
-  "condition": zod.number().nullish().describe('Property condition → see catalog property_condition'),
-  "standing": zod.number().nullish().describe('Property standing (high standard, luxury) → see catalog property_standing'),
-  "facades": zod.number().nullish().describe('Number of facades du bien'),
-  "availability": zod.number().nullish().describe('Property availability → see catalog property_availability'),
-  "available_at": zod.iso.date().nullish().describe('Availability date (when the rental is free)'),
-  "delivered_at": zod.iso.date().nullish().describe('Delivery date (for new construction)'),
-  "orientations": zod.array(zod.number()).optional().describe('Array of orientations → see catalog property_orientation'),
-  "services": zod.array(zod.number()).optional().describe('Array of services → see catalog property_service'),
-  "proximities": zod.array(zod.number()).optional().describe('Array of proximities → see catalog property_proximity'),
-  "activities": zod.array(zod.number()).optional().describe('Array of activities → see catalog property_activity'),
-  "tags": zod.array(zod.number()).optional().describe('Array of tags → see catalog tags'),
-  "tags_customized": zod.array(zod.string()).optional().describe('Array of customized tags (different for each agency)'),
+  "condition": zod.coerce.number().nullish().describe('Property condition → see catalog property_condition'),
+  "standing": zod.coerce.number().nullish().describe('Property standing (high standard, luxury) → see catalog property_standing'),
+  "facades": zod.coerce.number().nullish().describe('Number of facades du bien'),
+  "availability": zod.coerce.number().nullish().describe('Property availability → see catalog property_availability'),
+  "available_at": zod.coerce.string().nullish().describe('Availability date (when the rental is free)'),
+  "delivered_at": zod.coerce.string().nullish().describe('Delivery date (for new construction)'),
+  "orientations": zod.array(zod.coerce.number()).nullish().describe('Array of orientations → see catalog property_orientation'),
+  "services": zod.array(zod.coerce.number()).nullish().describe('Array of services → see catalog property_service'),
+  "proximities": zod.array(zod.coerce.number()).nullish().describe('Array of proximities → see catalog property_proximity'),
+  "activities": zod.array(zod.coerce.number()).nullish().describe('Array of activities → see catalog property_activity'),
+  "tags": zod.array(zod.coerce.number()).nullish().describe('Array of tags → see catalog tags'),
+  "tags_customized": zod.array(zod.coerce.string()).nullish().describe('Array of customized tags (different for each agency)'),
   "areas": zod.array(zod.object({
-  "type": zod.number().optional().describe('Room type → see catalog property_areas'),
-  "number": zod.number().optional().describe('Quantity of this room\/area'),
-  "area": zod.number().nullish().describe('Area of this room\/area'),
-  "flooring": zod.number().nullish().describe('Flooring type → see catalog property_flooring'),
-  "ceiling_height": zod.number().nullish().describe('Ceiling height of this room\/area'),
+  "type": zod.coerce.number().nullish().describe('Room type → see catalog property_areas'),
+  "number": zod.coerce.number().nullish().describe('Quantity of this room\/area'),
+  "area": zod.coerce.number().nullish().describe('Area of this room\/area'),
+  "flooring": zod.coerce.number().nullish().describe('Flooring type → see catalog property_flooring'),
+  "ceiling_height": zod.coerce.number().nullish().describe('Ceiling height of this room\/area'),
   "floor": zod.object({
-  "type": zod.number().optional().describe('Floor type → see catalog property_floor'),
-  "value": zod.number().nullish().describe('Value of the floor (0=ground, 1=first...)')
+  "type": zod.coerce.number().nullish().describe('Floor type → see catalog property_floor'),
+  "value": zod.coerce.number().nullish().describe('Value of the floor (0=ground, 1=first...)')
 }).nullish(),
-  "orientations": zod.array(zod.number()).optional().describe('Array of orientations → see catalog property_orientation'),
+  "orientations": zod.array(zod.coerce.number()).nullish().describe('Array of orientations → see catalog property_orientation'),
   "comments": zod.array(zod.object({
-  "language": zod.string().optional().describe('ISO 639-1 language code'),
-  "comment": zod.string().optional().describe('Comment of this room\/area')
-})).optional()
-})).optional().describe('Room and area details'),
+  "language": zod.coerce.string().nullish().describe('ISO 639-1 language code'),
+  "comment": zod.coerce.string().nullish().describe('Comment of this room\/area')
+})).nullish()
+})).nullish().describe('Room and area details'),
   "regulations": zod.array(zod.object({
-  "type": zod.number().optional().describe('Type of regulation, diagnostic or legal specification → see catalog property_regulation'),
-  "value": zod.string().nullish().describe('Value of this regulation'),
-  "date": zod.iso.date().nullish().describe('Date of the regulation')
-})).optional().describe('Diagnostics and regulations'),
-  "url": zod.url().nullish().describe('Dedicated property website'),
-  "filling_rate": zod.number().nullish().describe('Filling rate'),
-  "private_comment": zod.string().nullish().describe('Private description')
+  "type": zod.coerce.number().nullish().describe('Type of regulation, diagnostic or legal specification → see catalog property_regulation'),
+  "value": zod.coerce.string().nullish().describe('Value of this regulation'),
+  "date": zod.coerce.string().nullish().describe('Date of the regulation')
+})).nullish().describe('Diagnostics and regulations'),
+  "url": zod.coerce.string().nullish().describe('Dedicated property website'),
+  "filling_rate": zod.coerce.number().nullish().describe('Filling rate'),
+  "private_comment": zod.coerce.string().nullish().describe('Private description')
 }).describe('Request body to create\/update a property (POST\/PUT). Contains ONLY the fields accepted for writing according to the official Apimo documentation — distinct from the Property schema used for reading (GET).').and(zod.unknown())
 
 export const CreatePropertyResponse = zod.object({
-  "id": zod.number().optional(),
-  "created_at": zod.iso.datetime({"offset":true}).optional(),
-  "updated_at": zod.iso.datetime({"offset":true}).optional()
+  "id": zod.coerce.number().nullish(),
+  "created_at": zod.coerce.string().nullish(),
+  "updated_at": zod.coerce.string().nullish()
 })
 
 
@@ -503,8 +503,8 @@ export const CreatePropertyResponse = zod.object({
  * @summary Update a property
  */
 export const UpdatePropertyParams = zod.object({
-  "agency_id": zod.number(),
-  "property_id": zod.number()
+  "agency_id": zod.coerce.number(),
+  "property_id": zod.coerce.number()
 })
 
 export const updatePropertyBodyRankingMax = 5;
@@ -512,131 +512,131 @@ export const updatePropertyBodyRankingMax = 5;
 
 
 export const UpdatePropertyBody = zod.object({
-  "reference": zod.string().describe('Your unique identifier for this property. \*\*Required on creation (POST)\*\*'),
-  "user": zod.number().optional().describe('ID of the user. \*\*Required on creation (POST)\*\*'),
-  "step": zod.number().optional().describe('Main step (in progress, on hold...) → see catalog property_step'),
-  "status": zod.number().optional().describe('Property status (sub-category of step) → see catalog property_status'),
-  "group": zod.number().optional().describe('Database group → see catalog property_group'),
-  "parent": zod.number().nullish().describe('Parent property ID (e.g. apartment in a new development)'),
-  "ranking": zod.number().min(1).max(updatePropertyBodyRankingMax).optional().describe('Property rating from 1 to 5'),
-  "category": zod.number().optional().describe('Property category (sale, rental...) → see catalog property_category'),
-  "subcategory": zod.number().optional().describe('Property sub-category → see catalog property_subcategory'),
-  "name": zod.string().nullish().describe('Property name'),
-  "type": zod.number().optional().describe('Property type (apartment, house...) → see catalog property_type'),
-  "subtype": zod.number().optional().describe('Property subtype (studio, villa...) → see catalog property_subtype'),
+  "reference": zod.coerce.string().describe('Your unique identifier for this property. \*\*Required on creation (POST)\*\*'),
+  "user": zod.coerce.number().nullish().describe('ID of the user. \*\*Required on creation (POST)\*\*'),
+  "step": zod.coerce.number().nullish().describe('Main step (in progress, on hold...) → see catalog property_step'),
+  "status": zod.coerce.number().nullish().describe('Property status (sub-category of step) → see catalog property_status'),
+  "group": zod.coerce.number().nullish().describe('Database group → see catalog property_group'),
+  "parent": zod.coerce.number().nullish().describe('Parent property ID (e.g. apartment in a new development)'),
+  "ranking": zod.coerce.number().min(1).max(updatePropertyBodyRankingMax).nullish().describe('Property rating from 1 to 5'),
+  "category": zod.coerce.number().nullish().describe('Property category (sale, rental...) → see catalog property_category'),
+  "subcategory": zod.coerce.number().nullish().describe('Property sub-category → see catalog property_subcategory'),
+  "name": zod.coerce.string().nullish().describe('Property name'),
+  "type": zod.coerce.number().nullish().describe('Property type (apartment, house...) → see catalog property_type'),
+  "subtype": zod.coerce.number().nullish().describe('Property subtype (studio, villa...) → see catalog property_subtype'),
   "agreement": zod.object({
-  "type": zod.number().optional().describe('Mandate type → see catalog property_agreement'),
-  "reference": zod.string().optional().describe('Human-readable mandate reference'),
-  "start_at": zod.iso.date().optional().describe('Mandate start date'),
-  "end_at": zod.iso.date().optional().describe('Mandate end date')
-}).optional().describe('Mandate information'),
-  "publish_address": zod.boolean().optional().describe('Permission to publish the address details'),
-  "address": zod.string().nullish().describe('Address, street name'),
-  "address_more": zod.string().nullish().describe('Additional address details'),
-  "city": zod.string().optional().describe('Unique ID of the city - or - name of the city'),
-  "zipcode": zod.string().optional().describe('Postal code du bien'),
-  "district": zod.string().nullish().describe('Unique ID of the district - or - name of the district'),
-  "country": zod.string().optional().describe('ISO 3166-1 alpha-2 country code'),
-  "longitude": zod.number().optional().describe('Longitude GPS'),
-  "latitude": zod.number().optional().describe('Latitude GPS'),
+  "type": zod.coerce.number().nullish().describe('Mandate type → see catalog property_agreement'),
+  "reference": zod.coerce.string().nullish().describe('Human-readable mandate reference'),
+  "start_at": zod.coerce.string().nullish().describe('Mandate start date'),
+  "end_at": zod.coerce.string().nullish().describe('Mandate end date')
+}).nullish().describe('Mandate information'),
+  "publish_address": zod.coerce.boolean().nullish().describe('Permission to publish the address details'),
+  "address": zod.coerce.string().nullish().describe('Address, street name'),
+  "address_more": zod.coerce.string().nullish().describe('Additional address details'),
+  "city": zod.coerce.string().nullish().describe('Unique ID of the city - or - name of the city'),
+  "zipcode": zod.coerce.string().nullish().describe('Postal code du bien'),
+  "district": zod.coerce.string().nullish().describe('Unique ID of the district - or - name of the district'),
+  "country": zod.coerce.string().nullish().describe('ISO 3166-1 alpha-2 country code'),
+  "longitude": zod.coerce.number().nullish().describe('Longitude GPS'),
+  "latitude": zod.coerce.number().nullish().describe('Latitude GPS'),
   "area": zod.object({
-  "unit": zod.number().optional().describe('Area unit ID → see catalog unit_area'),
-  "value": zod.number().optional().describe('Decimal value of the area'),
-  "total": zod.number().nullish().describe('Total area (must be greater than value)'),
-  "weighted": zod.number().nullish().describe('Weighted area')
-}).optional().describe('Property area'),
-  "rooms": zod.number().optional().describe('Number of rooms (can be decimal depending on the country)'),
-  "sleeps": zod.number().nullish().describe('Number of sleeping places'),
+  "unit": zod.coerce.number().nullish().describe('Area unit ID → see catalog unit_area'),
+  "value": zod.coerce.number().nullish().describe('Decimal value of the area'),
+  "total": zod.coerce.number().nullish().describe('Total area (must be greater than value)'),
+  "weighted": zod.coerce.number().nullish().describe('Weighted area')
+}).nullish().describe('Property area'),
+  "rooms": zod.coerce.number().nullish().describe('Number of rooms (can be decimal depending on the country)'),
+  "sleeps": zod.coerce.number().nullish().describe('Number of sleeping places'),
   "price": zod.object({
-  "value": zod.number().optional().describe('Value of the price'),
-  "max": zod.number().nullish().describe('Max value of the price'),
-  "fees": zod.number().nullish().describe('Value of the rental fees'),
-  "unit": zod.number().optional().describe('Area unit ID → see catalog unit_area'),
-  "period": zod.number().nullish().describe('Rental frequency → see catalog property_period'),
-  "hide": zod.boolean().optional().describe('Hide the price'),
-  "inventory": zod.number().nullish().describe('Inventory fees (in case of rental)'),
-  "deposit": zod.number().nullish().describe('Security deposit pour le client'),
-  "currency": zod.string().optional().describe('Currency ISO 4217'),
-  "commission_owner": zod.number().nullish().describe('Commission for the owner'),
-  "commission_customer": zod.number().nullish().describe('Commission for the customer'),
-  "contribution": zod.number().nullish().describe('Value of the initial contribution (life annuity)'),
-  "pension": zod.number().nullish().describe('Value of the pension (life annuity)'),
-  "tenant": zod.number().nullish().describe('Value of the current rental'),
-  "sold": zod.number().nullish().describe('Final price in case of sale'),
-  "sold_at": zod.iso.date().nullish().describe('Date of the contract in case of sale'),
+  "value": zod.coerce.number().nullish().describe('Value of the price'),
+  "max": zod.coerce.number().nullish().describe('Max value of the price'),
+  "fees": zod.coerce.number().nullish().describe('Value of the rental fees'),
+  "unit": zod.coerce.number().nullish().describe('Area unit ID → see catalog unit_area'),
+  "period": zod.coerce.number().nullish().describe('Rental frequency → see catalog property_period'),
+  "hide": zod.coerce.boolean().nullish().describe('Hide the price'),
+  "inventory": zod.coerce.number().nullish().describe('Inventory fees (in case of rental)'),
+  "deposit": zod.coerce.number().nullish().describe('Security deposit pour le client'),
+  "currency": zod.coerce.string().nullish().describe('Currency ISO 4217'),
+  "commission_owner": zod.coerce.number().nullish().describe('Commission for the owner'),
+  "commission_customer": zod.coerce.number().nullish().describe('Commission for the customer'),
+  "contribution": zod.coerce.number().nullish().describe('Value of the initial contribution (life annuity)'),
+  "pension": zod.coerce.number().nullish().describe('Value of the pension (life annuity)'),
+  "tenant": zod.coerce.number().nullish().describe('Value of the current rental'),
+  "sold": zod.coerce.number().nullish().describe('Final price in case of sale'),
+  "sold_at": zod.coerce.string().nullish().describe('Date of the contract in case of sale'),
   "estimation": zod.object({
-  "min": zod.number().nullish().describe('Minimum estimation'),
-  "max": zod.number().nullish().describe('Maximum estimation')
+  "min": zod.coerce.number().nullish().describe('Minimum estimation'),
+  "max": zod.coerce.number().nullish().describe('Maximum estimation')
 }).nullish().describe('Price estimation'),
-  "negotiable": zod.number().nullish().describe('Negotiable price value')
-}).optional().describe('Property price'),
-  "owner": zod.number().nullish().describe('Unique ID of the contact (owner)'),
+  "negotiable": zod.coerce.number().nullish().describe('Negotiable price value')
+}).nullish().describe('Property price'),
+  "owner": zod.coerce.number().nullish().describe('Unique ID of the contact (owner)'),
   "view": zod.object({
-  "type": zod.number().optional().describe('View type → see catalog property_view_type'),
-  "landscape": zod.array(zod.number()).optional().describe('Array of landscapes → see catalog property_view_landscape')
+  "type": zod.coerce.number().nullish().describe('View type → see catalog property_view_type'),
+  "landscape": zod.array(zod.coerce.number()).nullish().describe('Array of landscapes → see catalog property_view_landscape')
 }).nullish(),
   "construction": zod.object({
-  "method": zod.array(zod.number()).optional().describe('Array of construction methods → see catalog property_construction_method'),
-  "construction_year": zod.number().nullish().describe('Construction year'),
-  "renovation_year": zod.number().nullish().describe('Renovation year')
+  "method": zod.array(zod.coerce.number()).nullish().describe('Array of construction methods → see catalog property_construction_method'),
+  "construction_year": zod.coerce.number().nullish().describe('Construction year'),
+  "renovation_year": zod.coerce.number().nullish().describe('Renovation year')
 }).nullish(),
   "floor": zod.object({
-  "type": zod.number().optional().describe('Floor type → see catalog property_floor'),
-  "levels": zod.number().nullish().describe('Number of levels of the property in the building'),
-  "floors": zod.number().nullish().describe('Number of floors in the building')
+  "type": zod.coerce.number().nullish().describe('Floor type → see catalog property_floor'),
+  "levels": zod.coerce.number().nullish().describe('Number of levels of the property in the building'),
+  "floors": zod.coerce.number().nullish().describe('Number of floors in the building')
 }).nullish(),
   "heating": zod.object({
-  "device": zod.number().nullish().describe('Heating device → see catalog property_heating_device'),
-  "access": zod.number().optional().describe('Heating access → see catalog property_heating_access'),
-  "type": zod.number().optional().describe('Heating type → see catalog property_heating_type')
+  "device": zod.coerce.number().nullish().describe('Heating device → see catalog property_heating_device'),
+  "access": zod.coerce.number().nullish().describe('Heating access → see catalog property_heating_access'),
+  "type": zod.coerce.number().nullish().describe('Heating type → see catalog property_heating_type')
 }).nullish(),
   "water": zod.object({
-  "hot_device": zod.number().nullish().describe('Hot water device → see catalog property_hot_water_device'),
-  "hot_access": zod.number().nullish().describe('Hot water access → see catalog property_hot_water_access'),
-  "waste": zod.number().nullish().describe('Waste water type → see catalog property_waste_water')
+  "hot_device": zod.coerce.number().nullish().describe('Hot water device → see catalog property_hot_water_device'),
+  "hot_access": zod.coerce.number().nullish().describe('Hot water access → see catalog property_hot_water_access'),
+  "waste": zod.coerce.number().nullish().describe('Waste water type → see catalog property_waste_water')
 }).nullish(),
-  "condition": zod.number().nullish().describe('Property condition → see catalog property_condition'),
-  "standing": zod.number().nullish().describe('Property standing (high standard, luxury) → see catalog property_standing'),
-  "facades": zod.number().nullish().describe('Number of facades du bien'),
-  "availability": zod.number().nullish().describe('Property availability → see catalog property_availability'),
-  "available_at": zod.iso.date().nullish().describe('Availability date (when the rental is free)'),
-  "delivered_at": zod.iso.date().nullish().describe('Delivery date (for new construction)'),
-  "orientations": zod.array(zod.number()).optional().describe('Array of orientations → see catalog property_orientation'),
-  "services": zod.array(zod.number()).optional().describe('Array of services → see catalog property_service'),
-  "proximities": zod.array(zod.number()).optional().describe('Array of proximities → see catalog property_proximity'),
-  "activities": zod.array(zod.number()).optional().describe('Array of activities → see catalog property_activity'),
-  "tags": zod.array(zod.number()).optional().describe('Array of tags → see catalog tags'),
-  "tags_customized": zod.array(zod.string()).optional().describe('Array of customized tags (different for each agency)'),
+  "condition": zod.coerce.number().nullish().describe('Property condition → see catalog property_condition'),
+  "standing": zod.coerce.number().nullish().describe('Property standing (high standard, luxury) → see catalog property_standing'),
+  "facades": zod.coerce.number().nullish().describe('Number of facades du bien'),
+  "availability": zod.coerce.number().nullish().describe('Property availability → see catalog property_availability'),
+  "available_at": zod.coerce.string().nullish().describe('Availability date (when the rental is free)'),
+  "delivered_at": zod.coerce.string().nullish().describe('Delivery date (for new construction)'),
+  "orientations": zod.array(zod.coerce.number()).nullish().describe('Array of orientations → see catalog property_orientation'),
+  "services": zod.array(zod.coerce.number()).nullish().describe('Array of services → see catalog property_service'),
+  "proximities": zod.array(zod.coerce.number()).nullish().describe('Array of proximities → see catalog property_proximity'),
+  "activities": zod.array(zod.coerce.number()).nullish().describe('Array of activities → see catalog property_activity'),
+  "tags": zod.array(zod.coerce.number()).nullish().describe('Array of tags → see catalog tags'),
+  "tags_customized": zod.array(zod.coerce.string()).nullish().describe('Array of customized tags (different for each agency)'),
   "areas": zod.array(zod.object({
-  "type": zod.number().optional().describe('Room type → see catalog property_areas'),
-  "number": zod.number().optional().describe('Quantity of this room\/area'),
-  "area": zod.number().nullish().describe('Area of this room\/area'),
-  "flooring": zod.number().nullish().describe('Flooring type → see catalog property_flooring'),
-  "ceiling_height": zod.number().nullish().describe('Ceiling height of this room\/area'),
+  "type": zod.coerce.number().nullish().describe('Room type → see catalog property_areas'),
+  "number": zod.coerce.number().nullish().describe('Quantity of this room\/area'),
+  "area": zod.coerce.number().nullish().describe('Area of this room\/area'),
+  "flooring": zod.coerce.number().nullish().describe('Flooring type → see catalog property_flooring'),
+  "ceiling_height": zod.coerce.number().nullish().describe('Ceiling height of this room\/area'),
   "floor": zod.object({
-  "type": zod.number().optional().describe('Floor type → see catalog property_floor'),
-  "value": zod.number().nullish().describe('Value of the floor (0=ground, 1=first...)')
+  "type": zod.coerce.number().nullish().describe('Floor type → see catalog property_floor'),
+  "value": zod.coerce.number().nullish().describe('Value of the floor (0=ground, 1=first...)')
 }).nullish(),
-  "orientations": zod.array(zod.number()).optional().describe('Array of orientations → see catalog property_orientation'),
+  "orientations": zod.array(zod.coerce.number()).nullish().describe('Array of orientations → see catalog property_orientation'),
   "comments": zod.array(zod.object({
-  "language": zod.string().optional().describe('ISO 639-1 language code'),
-  "comment": zod.string().optional().describe('Comment of this room\/area')
-})).optional()
-})).optional().describe('Room and area details'),
+  "language": zod.coerce.string().nullish().describe('ISO 639-1 language code'),
+  "comment": zod.coerce.string().nullish().describe('Comment of this room\/area')
+})).nullish()
+})).nullish().describe('Room and area details'),
   "regulations": zod.array(zod.object({
-  "type": zod.number().optional().describe('Type of regulation, diagnostic or legal specification → see catalog property_regulation'),
-  "value": zod.string().nullish().describe('Value of this regulation'),
-  "date": zod.iso.date().nullish().describe('Date of the regulation')
-})).optional().describe('Diagnostics and regulations'),
-  "url": zod.url().nullish().describe('Dedicated property website'),
-  "filling_rate": zod.number().nullish().describe('Filling rate'),
-  "private_comment": zod.string().nullish().describe('Private description')
+  "type": zod.coerce.number().nullish().describe('Type of regulation, diagnostic or legal specification → see catalog property_regulation'),
+  "value": zod.coerce.string().nullish().describe('Value of this regulation'),
+  "date": zod.coerce.string().nullish().describe('Date of the regulation')
+})).nullish().describe('Diagnostics and regulations'),
+  "url": zod.coerce.string().nullish().describe('Dedicated property website'),
+  "filling_rate": zod.coerce.number().nullish().describe('Filling rate'),
+  "private_comment": zod.coerce.string().nullish().describe('Private description')
 }).describe('Request body to create\/update a property (POST\/PUT). Contains ONLY the fields accepted for writing according to the official Apimo documentation — distinct from the Property schema used for reading (GET).')
 
 export const UpdatePropertyResponse = zod.object({
-  "id": zod.number().optional(),
-  "created_at": zod.iso.datetime({"offset":true}).optional(),
-  "updated_at": zod.iso.datetime({"offset":true}).optional()
+  "id": zod.coerce.number().nullish(),
+  "created_at": zod.coerce.string().nullish(),
+  "updated_at": zod.coerce.string().nullish()
 })
 
 
@@ -645,18 +645,18 @@ export const UpdatePropertyResponse = zod.object({
  * @summary Update information related to the publishing of the property
  */
 export const UpdatePropertyProviderParams = zod.object({
-  "agency_id": zod.number().describe('Unique ID of the agency'),
-  "property_id": zod.number().describe('Unique ID of the property')
+  "agency_id": zod.coerce.number().describe('Unique ID of the agency'),
+  "property_id": zod.coerce.number().describe('Unique ID of the property')
 })
 
 export const UpdatePropertyProviderBody = zod.object({
-  "url": zod.url().optional().describe('URL of the property on the partner portal or website'),
-  "date": zod.iso.datetime({"offset":true}).optional().describe('Publication date of the property (format YYYY-MM-DD HH:MM:SS)')
+  "url": zod.coerce.string().nullish().describe('URL of the property on the partner portal or website'),
+  "date": zod.coerce.string().nullish().describe('Publication date of the property (format YYYY-MM-DD HH:MM:SS)')
 })
 
 export const UpdatePropertyProviderResponse = zod.object({
-  "url": zod.string().optional(),
-  "date": zod.string().optional()
+  "url": zod.coerce.string().nullish(),
+  "date": zod.coerce.string().nullish()
 })
 
 
@@ -665,20 +665,20 @@ export const UpdatePropertyProviderResponse = zod.object({
  * @summary Provider list for a specific property
  */
 export const ListPropertyProvidersParams = zod.object({
-  "agency_id": zod.number(),
-  "property_id": zod.number()
+  "agency_id": zod.coerce.number(),
+  "property_id": zod.coerce.number()
 })
 
 export const listPropertyProvidersQueryStepDefault = 1;
 
 export const ListPropertyProvidersQueryParams = zod.object({
-  "provider": zod.number().optional().describe('Unique reference of the partner portal'),
+  "provider": zod.coerce.number().nullish().describe('Unique reference of the partner portal'),
   "step": zod.union([zod.literal(1),zod.literal(2)]).default(listPropertyProvidersQueryStepDefault).describe('1 = active, 2 = inactive')
 })
 
 export const ListPropertyProvidersResponse = zod.object({
-  "provider": zod.number().optional().describe('Partner portal ID'),
-  "step": zod.number().optional().describe('1 = active, 2 = inactive')
+  "provider": zod.coerce.number().nullish().describe('Partner portal ID'),
+  "step": zod.coerce.number().nullish().describe('1 = active, 2 = inactive')
 })
 
 
@@ -687,22 +687,22 @@ export const ListPropertyProvidersResponse = zod.object({
  * @summary Grant property access to a provider
  */
 export const GrantPropertyProviderParams = zod.object({
-  "agency_id": zod.number(),
-  "property_id": zod.number()
+  "agency_id": zod.coerce.number(),
+  "property_id": zod.coerce.number()
 })
 
 export const grantPropertyProviderBodyStepDefault = 1;
 
 export const GrantPropertyProviderBody = zod.object({
-  "provider": zod.number().optional().describe('Unique reference of the partner portal'),
+  "provider": zod.coerce.number().nullish().describe('Unique reference of the partner portal'),
   "step": zod.union([zod.literal(1),zod.literal(2)]).default(grantPropertyProviderBodyStepDefault).describe('1 = active, 2 = inactive')
 })
 
 export const GrantPropertyProviderResponse = zod.object({
   "providers": zod.array(zod.object({
-  "provider": zod.number().optional(),
-  "step": zod.number().optional()
-})).optional()
+  "provider": zod.coerce.number().nullish(),
+  "step": zod.coerce.number().nullish()
+})).nullish()
 })
 
 
@@ -710,25 +710,25 @@ export const GrantPropertyProviderResponse = zod.object({
  * @summary Upload a picture for a property
  */
 export const UploadPropertyPictureParams = zod.object({
-  "agency_id": zod.number(),
-  "property_id": zod.number()
+  "agency_id": zod.coerce.number(),
+  "property_id": zod.coerce.number()
 })
 
 export const UploadPropertyPictureBody = zod.object({
-  "reference": zod.string().describe('Your unique reference for the photo'),
-  "content": zod.string().describe('Photo content in base64'),
+  "reference": zod.coerce.string().describe('Your unique reference for the photo'),
+  "content": zod.coerce.string().describe('Photo content in base64'),
   "comments": zod.array(zod.object({
-  "language": zod.string().optional(),
-  "comment": zod.string().optional()
-})).optional()
+  "language": zod.coerce.string().nullish(),
+  "comment": zod.coerce.string().nullish()
+})).nullish()
 })
 
 export const UploadPropertyPictureResponse = zod.object({
-  "id": zod.number().optional(),
-  "rank": zod.number().optional(),
-  "url": zod.url().optional(),
-  "width_max": zod.number().optional(),
-  "height_max": zod.number().optional()
+  "id": zod.coerce.number().nullish(),
+  "rank": zod.coerce.number().nullish(),
+  "url": zod.coerce.string().nullish(),
+  "width_max": zod.coerce.number().nullish(),
+  "height_max": zod.coerce.number().nullish()
 })
 
 
@@ -736,13 +736,13 @@ export const UploadPropertyPictureResponse = zod.object({
  * @summary Delete a picture from a property
  */
 export const DeletePropertyPictureParams = zod.object({
-  "agency_id": zod.number(),
-  "property_id": zod.number(),
-  "picture_id": zod.number()
+  "agency_id": zod.coerce.number(),
+  "property_id": zod.coerce.number(),
+  "picture_id": zod.coerce.number()
 })
 
 export const DeletePropertyPictureResponse = zod.object({
-  "success": zod.boolean().optional()
+  "success": zod.coerce.boolean().nullish()
 })
 
 
@@ -750,18 +750,18 @@ export const DeletePropertyPictureResponse = zod.object({
  * @summary Add or embed a media (virtual tour, video...)
  */
 export const AddPropertyMediaParams = zod.object({
-  "agency_id": zod.number(),
-  "property_id": zod.number()
+  "agency_id": zod.coerce.number(),
+  "property_id": zod.coerce.number()
 })
 
 export const AddPropertyMediaBody = zod.object({
-  "reference": zod.string().optional().describe('Your unique reference'),
+  "reference": zod.coerce.string().nullish().describe('Your unique reference'),
   "type": zod.union([zod.literal(1),zod.literal(2),zod.literal(9),zod.literal(12),zod.literal(15),zod.literal(19)]).describe('Media type: 1=Dailymotion, 2=Youtube, 9=HTML, 12=Matterport, 15=Vimeo, 19=Clap.video'),
-  "content": zod.string().describe('HTML content or HTTP link of the media')
+  "content": zod.coerce.string().describe('HTML content or HTTP link of the media')
 })
 
 export const AddPropertyMediaResponse = zod.object({
-  "id": zod.number().optional()
+  "id": zod.coerce.number().nullish()
 })
 
 
@@ -769,13 +769,13 @@ export const AddPropertyMediaResponse = zod.object({
  * @summary Delete a media from a property
  */
 export const DeletePropertyMediaParams = zod.object({
-  "agency_id": zod.number(),
-  "property_id": zod.number(),
-  "media_id": zod.number()
+  "agency_id": zod.coerce.number(),
+  "property_id": zod.coerce.number(),
+  "media_id": zod.coerce.number()
 })
 
 export const DeletePropertyMediaResponse = zod.object({
-  "success": zod.boolean().optional()
+  "success": zod.coerce.boolean().nullish()
 })
 
 
@@ -783,28 +783,28 @@ export const DeletePropertyMediaResponse = zod.object({
  * @summary Add a document to a property
  */
 export const AddPropertyDocumentParams = zod.object({
-  "agency_id": zod.number(),
-  "property_id": zod.number()
+  "agency_id": zod.coerce.number(),
+  "property_id": zod.coerce.number()
 })
 
 export const AddPropertyDocumentBody = zod.object({
-  "name": zod.string().describe('File name'),
-  "type_id": zod.number().optional().describe('Document type → see catalog document_type'),
-  "content": zod.string().describe('Document content in base64')
+  "name": zod.coerce.string().describe('File name'),
+  "type_id": zod.coerce.number().nullish().describe('Document type → see catalog document_type'),
+  "content": zod.coerce.string().describe('Document content in base64')
 })
 
 export const AddPropertyDocumentResponse = zod.object({
-  "id": zod.number().optional(),
-  "name": zod.string().optional(),
-  "download_url": zod.url().optional(),
-  "url": zod.url().optional(),
-  "filesize": zod.string().optional(),
-  "type_id": zod.number().optional(),
-  "internet": zod.boolean().optional(),
-  "extranet": zod.boolean().optional(),
-  "private": zod.boolean().optional(),
-  "created_at": zod.iso.datetime({"offset":true}).optional(),
-  "updated_at": zod.iso.datetime({"offset":true}).optional()
+  "id": zod.coerce.number().nullish(),
+  "name": zod.coerce.string().nullish(),
+  "download_url": zod.coerce.string().nullish(),
+  "url": zod.coerce.string().nullish(),
+  "filesize": zod.coerce.string().nullish(),
+  "type_id": zod.coerce.number().nullish(),
+  "internet": zod.coerce.boolean().nullish(),
+  "extranet": zod.coerce.boolean().nullish(),
+  "private": zod.coerce.boolean().nullish(),
+  "created_at": zod.coerce.string().nullish(),
+  "updated_at": zod.coerce.string().nullish()
 })
 
 
@@ -812,13 +812,13 @@ export const AddPropertyDocumentResponse = zod.object({
  * @summary Delete a document from a property
  */
 export const DeletePropertyDocumentParams = zod.object({
-  "agency_id": zod.number(),
-  "property_id": zod.number(),
-  "document_id": zod.number()
+  "agency_id": zod.coerce.number(),
+  "property_id": zod.coerce.number(),
+  "document_id": zod.coerce.number()
 })
 
 export const DeletePropertyDocumentResponse = zod.object({
-  "success": zod.boolean().optional()
+  "success": zod.coerce.boolean().nullish()
 })
 
 
@@ -826,20 +826,20 @@ export const DeletePropertyDocumentResponse = zod.object({
  * @summary Add or update a multilingual description
  */
 export const UpsertPropertyCommentParams = zod.object({
-  "agency_id": zod.number(),
-  "property_id": zod.number()
+  "agency_id": zod.coerce.number(),
+  "property_id": zod.coerce.number()
 })
 
 export const UpsertPropertyCommentBody = zod.object({
-  "language": zod.string().describe('ISO 639-1 language code'),
-  "title": zod.string().optional(),
-  "subtitle": zod.string().nullish(),
-  "hook": zod.string().nullish(),
-  "comment": zod.string().optional().describe('Full description')
+  "language": zod.coerce.string().describe('ISO 639-1 language code'),
+  "title": zod.coerce.string().nullish(),
+  "subtitle": zod.coerce.string().nullish(),
+  "hook": zod.coerce.string().nullish(),
+  "comment": zod.coerce.string().nullish().describe('Full description')
 })
 
 export const UpsertPropertyCommentResponse = zod.object({
-  "id": zod.number().optional()
+  "id": zod.coerce.number().nullish()
 })
 
 
@@ -852,8 +852,8 @@ export const UpsertPropertyCommentResponse = zod.object({
  * @summary Get matched requests (crossings) for a property
  */
 export const ListPropertyCrossingsParams = zod.object({
-  "agency_id": zod.number(),
-  "property_id": zod.number()
+  "agency_id": zod.coerce.number(),
+  "property_id": zod.coerce.number()
 })
 
 export const listPropertyCrossingsQueryLimitDefault = 10000;
@@ -862,23 +862,23 @@ export const listPropertyCrossingsQueryLimitMax = 10000;
 export const listPropertyCrossingsQueryOffsetDefault = 0;
 
 export const ListPropertyCrossingsQueryParams = zod.object({
-  "limit": zod.number().max(listPropertyCrossingsQueryLimitMax).default(listPropertyCrossingsQueryLimitDefault),
-  "offset": zod.number().default(listPropertyCrossingsQueryOffsetDefault),
-  "timestamp": zod.number().optional(),
-  "step": zod.number().optional().describe('Filter by crossing step')
+  "limit": zod.coerce.number().max(listPropertyCrossingsQueryLimitMax).default(listPropertyCrossingsQueryLimitDefault),
+  "offset": zod.coerce.number().default(listPropertyCrossingsQueryOffsetDefault),
+  "timestamp": zod.coerce.number().nullish(),
+  "step": zod.coerce.number().nullish().describe('Filter by crossing step')
 })
 
 export const ListPropertyCrossingsResponse = zod.object({
-  "total_items": zod.number().optional().describe('Total number of items (regardless of pagination)'),
-  "timestamp": zod.number().optional().describe('UNIX timestamp of the most recent item in the list')
+  "total_items": zod.coerce.number().nullish().describe('Total number of items (regardless of pagination)'),
+  "timestamp": zod.coerce.number().nullish().describe('UNIX timestamp of the most recent item in the list')
 }).and(zod.object({
   "crossings": zod.array(zod.object({
-  "request_id": zod.number().optional().describe('ID of the matched request'),
-  "step_id": zod.union([zod.literal(1),zod.literal(2),zod.literal(3)]).optional().describe('1=To suggest, 2=Already suggested, 3=Not suggested'),
-  "total": zod.string().optional().describe('Matching score from 0 to 100'),
-  "created_at": zod.iso.datetime({"offset":true}).optional(),
-  "updated_at": zod.iso.datetime({"offset":true}).optional()
-})).optional()
+  "request_id": zod.coerce.number().nullish().describe('ID of the matched request'),
+  "step_id": zod.union([zod.literal(1),zod.literal(2),zod.literal(3)]).nullish().describe('1=To suggest, 2=Already suggested, 3=Not suggested'),
+  "total": zod.coerce.string().nullish().describe('Matching score from 0 to 100'),
+  "created_at": zod.coerce.string().nullish(),
+  "updated_at": zod.coerce.string().nullish()
+})).nullish()
 }))
 
 
@@ -895,7 +895,7 @@ export const ListPropertyCrossingsResponse = zod.object({
  * @summary Retrieve the contacts list
  */
 export const ListContactsParams = zod.object({
-  "agency_id": zod.number()
+  "agency_id": zod.coerce.number()
 })
 
 export const listContactsQueryLimitDefault = 10000;
@@ -904,62 +904,62 @@ export const listContactsQueryLimitMax = 10000;
 export const listContactsQueryOffsetDefault = 0;
 
 export const ListContactsQueryParams = zod.object({
-  "limit": zod.number().max(listContactsQueryLimitMax).default(listContactsQueryLimitDefault),
-  "offset": zod.number().default(listContactsQueryOffsetDefault),
-  "timestamp": zod.number().optional()
+  "limit": zod.coerce.number().max(listContactsQueryLimitMax).default(listContactsQueryLimitDefault),
+  "offset": zod.coerce.number().default(listContactsQueryOffsetDefault),
+  "timestamp": zod.coerce.number().nullish()
 })
 
 export const ListContactsResponse = zod.object({
-  "total_items": zod.number().optional().describe('Total number of items (regardless of pagination)'),
-  "timestamp": zod.number().optional().describe('UNIX timestamp of the most recent item in the list')
+  "total_items": zod.coerce.number().nullish().describe('Total number of items (regardless of pagination)'),
+  "timestamp": zod.coerce.number().nullish().describe('UNIX timestamp of the most recent item in the list')
 }).and(zod.object({
   "contacts": zod.array(zod.object({
-  "id": zod.number().optional().describe('Identifiant unique du contact'),
-  "category": zod.number().describe('Contact category → see catalog contact_category (e.g. individual, professional). \*\*Required on creation (POST)\*\*'),
-  "user": zod.number().describe('ID of the responsible negotiator. \*\*Required on creation (POST)\*\*'),
-  "password": zod.string().nullish().describe('Password for Extranet access'),
-  "activity": zod.number().nullish().describe('Main activity (for professionals only) → see catalog contact_activity'),
-  "title": zod.number().nullish().describe('Title → see catalog contact_title (e.g. Mr., Mrs.)'),
-  "firstname": zod.string().nullish().describe('Contact first name'),
-  "lastname": zod.string().nullish().describe('Last name. \*\*Required on creation (POST) if company not provided\*\*'),
-  "company": zod.string().nullish().describe('Company name. \*\*Required on creation (POST) if lastname not provided\*\*'),
-  "vat_number": zod.string().nullish().describe('Company VAT number'),
-  "spouse_title": zod.number().nullish().describe('Spouse title → see catalog contact_title'),
-  "spouse_firstname": zod.string().nullish().describe('Spouse first name'),
-  "spouse_lastname": zod.string().nullish().describe('Spouse last name'),
-  "birthday_at": zod.iso.date().nullish().describe('Date of birth (format YYYY-MM-DD)'),
-  "spouse_birthday_at": zod.iso.date().nullish().describe('Spouse date of birth (format YYYY-MM-DD)'),
-  "email": zod.email().nullish().describe('Email address'),
-  "spouse_email": zod.email().nullish().describe('Email address du conjoint'),
-  "phone": zod.string().nullish().describe('Landline phone'),
-  "mobile": zod.string().nullish().describe('Mobile phone'),
-  "fax": zod.string().nullish().describe('Fax number'),
-  "address": zod.string().nullish().describe('Postal address'),
-  "address_more": zod.string().nullish().describe('Additional address details'),
-  "zipcode": zod.string().nullish().describe('Postal code'),
-  "city": zod.string().nullish().describe('City (name or reference)'),
-  "country": zod.string().nullish().describe('ISO 3166-1 alpha-2 country code'),
-  "nationality": zod.string().nullish().describe('Nationality - ISO 3166-1 alpha-2 country code'),
-  "spouse_nationality": zod.string().nullish().describe('Spouse nationality - ISO 3166-1 alpha-2 country code'),
-  "taxcode": zod.string().nullish().describe('Contact tax code'),
-  "spouse_taxcode": zod.string().nullish().describe('Spouse tax code'),
-  "comment": zod.string().nullish().describe('Free comment'),
-  "relationship": zod.number().nullish().describe('Contact relationship → see catalog contact_relationship'),
-  "civil_status": zod.number().nullish().describe('Marital status → see catalog contact_civil_status'),
-  "children": zod.number().nullish().describe('Number of children'),
-  "website": zod.url().nullish().describe('Contact website'),
-  "mailing": zod.number().nullish().describe('Paper mailing subscription → see catalog subscription'),
-  "emailing": zod.number().nullish().describe('Electronic mailing subscription → see catalog subscription'),
-  "magazine": zod.number().nullish().describe('Magazine subscription → see catalog subscription'),
-  "incoming_action_at": zod.iso.datetime({"offset":true}).nullish().describe('Date of the last incoming action'),
-  "outgoing_action_at": zod.iso.datetime({"offset":true}).nullish().describe('Date of the last outgoing action'),
-  "language": zod.array(zod.string()).optional().describe('ISO 639-1 language codes spoken by the contact'),
+  "id": zod.coerce.number().nullish().describe('Identifiant unique du contact'),
+  "category": zod.coerce.number().describe('Contact category → see catalog contact_category (e.g. individual, professional). \*\*Required on creation (POST)\*\*'),
+  "user": zod.coerce.number().describe('ID of the responsible negotiator. \*\*Required on creation (POST)\*\*'),
+  "password": zod.coerce.string().nullish().describe('Password for Extranet access'),
+  "activity": zod.coerce.number().nullish().describe('Main activity (for professionals only) → see catalog contact_activity'),
+  "title": zod.coerce.number().nullish().describe('Title → see catalog contact_title (e.g. Mr., Mrs.)'),
+  "firstname": zod.coerce.string().nullish().describe('Contact first name'),
+  "lastname": zod.coerce.string().nullish().describe('Last name. \*\*Required on creation (POST) if company not provided\*\*'),
+  "company": zod.coerce.string().nullish().describe('Company name. \*\*Required on creation (POST) if lastname not provided\*\*'),
+  "vat_number": zod.coerce.string().nullish().describe('Company VAT number'),
+  "spouse_title": zod.coerce.number().nullish().describe('Spouse title → see catalog contact_title'),
+  "spouse_firstname": zod.coerce.string().nullish().describe('Spouse first name'),
+  "spouse_lastname": zod.coerce.string().nullish().describe('Spouse last name'),
+  "birthday_at": zod.coerce.string().nullish().describe('Date of birth (format YYYY-MM-DD)'),
+  "spouse_birthday_at": zod.coerce.string().nullish().describe('Spouse date of birth (format YYYY-MM-DD)'),
+  "email": zod.coerce.string().nullish().describe('Email address'),
+  "spouse_email": zod.coerce.string().nullish().describe('Email address du conjoint'),
+  "phone": zod.coerce.string().nullish().describe('Landline phone'),
+  "mobile": zod.coerce.string().nullish().describe('Mobile phone'),
+  "fax": zod.coerce.string().nullish().describe('Fax number'),
+  "address": zod.coerce.string().nullish().describe('Postal address'),
+  "address_more": zod.coerce.string().nullish().describe('Additional address details'),
+  "zipcode": zod.coerce.string().nullish().describe('Postal code'),
+  "city": zod.coerce.string().nullish().describe('City (name or reference)'),
+  "country": zod.coerce.string().nullish().describe('ISO 3166-1 alpha-2 country code'),
+  "nationality": zod.coerce.string().nullish().describe('Nationality - ISO 3166-1 alpha-2 country code'),
+  "spouse_nationality": zod.coerce.string().nullish().describe('Spouse nationality - ISO 3166-1 alpha-2 country code'),
+  "taxcode": zod.coerce.string().nullish().describe('Contact tax code'),
+  "spouse_taxcode": zod.coerce.string().nullish().describe('Spouse tax code'),
+  "comment": zod.coerce.string().nullish().describe('Free comment'),
+  "relationship": zod.coerce.number().nullish().describe('Contact relationship → see catalog contact_relationship'),
+  "civil_status": zod.coerce.number().nullish().describe('Marital status → see catalog contact_civil_status'),
+  "children": zod.coerce.number().nullish().describe('Number of children'),
+  "website": zod.coerce.string().nullish().describe('Contact website'),
+  "mailing": zod.coerce.number().nullish().describe('Paper mailing subscription → see catalog subscription'),
+  "emailing": zod.coerce.number().nullish().describe('Electronic mailing subscription → see catalog subscription'),
+  "magazine": zod.coerce.number().nullish().describe('Magazine subscription → see catalog subscription'),
+  "incoming_action_at": zod.coerce.string().nullish().describe('Date of the last incoming action'),
+  "outgoing_action_at": zod.coerce.string().nullish().describe('Date of the last outgoing action'),
+  "language": zod.array(zod.coerce.string()).nullish().describe('ISO 639-1 language codes spoken by the contact'),
   "tags_customized": zod.array(zod.object({
-  "comment": zod.string().optional()
-})).optional().describe('Agency customized tags'),
-  "created_at": zod.iso.datetime({"offset":true}).optional().describe('Creation date'),
-  "updated_at": zod.iso.datetime({"offset":true}).optional().describe('Last update date')
-}).describe('Agency client contact (individual or professional)')).optional()
+  "comment": zod.coerce.string().nullish()
+})).nullish().describe('Agency customized tags'),
+  "created_at": zod.coerce.string().nullish().describe('Creation date'),
+  "updated_at": zod.coerce.string().nullish().describe('Last update date')
+}).describe('Agency client contact (individual or professional)')).nullish()
 }))
 
 
@@ -967,59 +967,59 @@ export const ListContactsResponse = zod.object({
  * @summary Create a new contact
  */
 export const CreateContactParams = zod.object({
-  "agency_id": zod.number()
+  "agency_id": zod.coerce.number()
 })
 
 export const CreateContactBody = zod.object({
-  "id": zod.number().optional().describe('Identifiant unique du contact'),
-  "category": zod.number().describe('Contact category → see catalog contact_category (e.g. individual, professional). \*\*Required on creation (POST)\*\*'),
-  "user": zod.number().describe('ID of the responsible negotiator. \*\*Required on creation (POST)\*\*'),
-  "password": zod.string().nullish().describe('Password for Extranet access'),
-  "activity": zod.number().nullish().describe('Main activity (for professionals only) → see catalog contact_activity'),
-  "title": zod.number().nullish().describe('Title → see catalog contact_title (e.g. Mr., Mrs.)'),
-  "firstname": zod.string().nullish().describe('Contact first name'),
-  "lastname": zod.string().nullish().describe('Last name. \*\*Required on creation (POST) if company not provided\*\*'),
-  "company": zod.string().nullish().describe('Company name. \*\*Required on creation (POST) if lastname not provided\*\*'),
-  "vat_number": zod.string().nullish().describe('Company VAT number'),
-  "spouse_title": zod.number().nullish().describe('Spouse title → see catalog contact_title'),
-  "spouse_firstname": zod.string().nullish().describe('Spouse first name'),
-  "spouse_lastname": zod.string().nullish().describe('Spouse last name'),
-  "birthday_at": zod.iso.date().nullish().describe('Date of birth (format YYYY-MM-DD)'),
-  "spouse_birthday_at": zod.iso.date().nullish().describe('Spouse date of birth (format YYYY-MM-DD)'),
-  "email": zod.email().nullish().describe('Email address'),
-  "spouse_email": zod.email().nullish().describe('Email address du conjoint'),
-  "phone": zod.string().nullish().describe('Landline phone'),
-  "mobile": zod.string().nullish().describe('Mobile phone'),
-  "fax": zod.string().nullish().describe('Fax number'),
-  "address": zod.string().nullish().describe('Postal address'),
-  "address_more": zod.string().nullish().describe('Additional address details'),
-  "zipcode": zod.string().nullish().describe('Postal code'),
-  "city": zod.string().nullish().describe('City (name or reference)'),
-  "country": zod.string().nullish().describe('ISO 3166-1 alpha-2 country code'),
-  "nationality": zod.string().nullish().describe('Nationality - ISO 3166-1 alpha-2 country code'),
-  "spouse_nationality": zod.string().nullish().describe('Spouse nationality - ISO 3166-1 alpha-2 country code'),
-  "taxcode": zod.string().nullish().describe('Contact tax code'),
-  "spouse_taxcode": zod.string().nullish().describe('Spouse tax code'),
-  "comment": zod.string().nullish().describe('Free comment'),
-  "relationship": zod.number().nullish().describe('Contact relationship → see catalog contact_relationship'),
-  "civil_status": zod.number().nullish().describe('Marital status → see catalog contact_civil_status'),
-  "children": zod.number().nullish().describe('Number of children'),
-  "website": zod.url().nullish().describe('Contact website'),
-  "mailing": zod.number().nullish().describe('Paper mailing subscription → see catalog subscription'),
-  "emailing": zod.number().nullish().describe('Electronic mailing subscription → see catalog subscription'),
-  "magazine": zod.number().nullish().describe('Magazine subscription → see catalog subscription'),
-  "incoming_action_at": zod.iso.datetime({"offset":true}).nullish().describe('Date of the last incoming action'),
-  "outgoing_action_at": zod.iso.datetime({"offset":true}).nullish().describe('Date of the last outgoing action'),
-  "language": zod.array(zod.string()).optional().describe('ISO 639-1 language codes spoken by the contact'),
+  "id": zod.coerce.number().nullish().describe('Identifiant unique du contact'),
+  "category": zod.coerce.number().describe('Contact category → see catalog contact_category (e.g. individual, professional). \*\*Required on creation (POST)\*\*'),
+  "user": zod.coerce.number().describe('ID of the responsible negotiator. \*\*Required on creation (POST)\*\*'),
+  "password": zod.coerce.string().nullish().describe('Password for Extranet access'),
+  "activity": zod.coerce.number().nullish().describe('Main activity (for professionals only) → see catalog contact_activity'),
+  "title": zod.coerce.number().nullish().describe('Title → see catalog contact_title (e.g. Mr., Mrs.)'),
+  "firstname": zod.coerce.string().nullish().describe('Contact first name'),
+  "lastname": zod.coerce.string().nullish().describe('Last name. \*\*Required on creation (POST) if company not provided\*\*'),
+  "company": zod.coerce.string().nullish().describe('Company name. \*\*Required on creation (POST) if lastname not provided\*\*'),
+  "vat_number": zod.coerce.string().nullish().describe('Company VAT number'),
+  "spouse_title": zod.coerce.number().nullish().describe('Spouse title → see catalog contact_title'),
+  "spouse_firstname": zod.coerce.string().nullish().describe('Spouse first name'),
+  "spouse_lastname": zod.coerce.string().nullish().describe('Spouse last name'),
+  "birthday_at": zod.coerce.string().nullish().describe('Date of birth (format YYYY-MM-DD)'),
+  "spouse_birthday_at": zod.coerce.string().nullish().describe('Spouse date of birth (format YYYY-MM-DD)'),
+  "email": zod.coerce.string().nullish().describe('Email address'),
+  "spouse_email": zod.coerce.string().nullish().describe('Email address du conjoint'),
+  "phone": zod.coerce.string().nullish().describe('Landline phone'),
+  "mobile": zod.coerce.string().nullish().describe('Mobile phone'),
+  "fax": zod.coerce.string().nullish().describe('Fax number'),
+  "address": zod.coerce.string().nullish().describe('Postal address'),
+  "address_more": zod.coerce.string().nullish().describe('Additional address details'),
+  "zipcode": zod.coerce.string().nullish().describe('Postal code'),
+  "city": zod.coerce.string().nullish().describe('City (name or reference)'),
+  "country": zod.coerce.string().nullish().describe('ISO 3166-1 alpha-2 country code'),
+  "nationality": zod.coerce.string().nullish().describe('Nationality - ISO 3166-1 alpha-2 country code'),
+  "spouse_nationality": zod.coerce.string().nullish().describe('Spouse nationality - ISO 3166-1 alpha-2 country code'),
+  "taxcode": zod.coerce.string().nullish().describe('Contact tax code'),
+  "spouse_taxcode": zod.coerce.string().nullish().describe('Spouse tax code'),
+  "comment": zod.coerce.string().nullish().describe('Free comment'),
+  "relationship": zod.coerce.number().nullish().describe('Contact relationship → see catalog contact_relationship'),
+  "civil_status": zod.coerce.number().nullish().describe('Marital status → see catalog contact_civil_status'),
+  "children": zod.coerce.number().nullish().describe('Number of children'),
+  "website": zod.coerce.string().nullish().describe('Contact website'),
+  "mailing": zod.coerce.number().nullish().describe('Paper mailing subscription → see catalog subscription'),
+  "emailing": zod.coerce.number().nullish().describe('Electronic mailing subscription → see catalog subscription'),
+  "magazine": zod.coerce.number().nullish().describe('Magazine subscription → see catalog subscription'),
+  "incoming_action_at": zod.coerce.string().nullish().describe('Date of the last incoming action'),
+  "outgoing_action_at": zod.coerce.string().nullish().describe('Date of the last outgoing action'),
+  "language": zod.array(zod.coerce.string()).nullish().describe('ISO 639-1 language codes spoken by the contact'),
   "tags_customized": zod.array(zod.object({
-  "comment": zod.string().optional()
-})).optional().describe('Agency customized tags'),
-  "created_at": zod.iso.datetime({"offset":true}).optional().describe('Creation date'),
-  "updated_at": zod.iso.datetime({"offset":true}).optional().describe('Last update date')
+  "comment": zod.coerce.string().nullish()
+})).nullish().describe('Agency customized tags'),
+  "created_at": zod.coerce.string().nullish().describe('Creation date'),
+  "updated_at": zod.coerce.string().nullish().describe('Last update date')
 }).describe('Agency client contact (individual or professional)')
 
 export const CreateContactResponse = zod.object({
-  "id": zod.string().optional().describe('ID of the created contact (returned as string by the API)')
+  "id": zod.coerce.string().nullish().describe('ID of the created contact (returned as string by the API)')
 })
 
 
@@ -1028,60 +1028,60 @@ export const CreateContactResponse = zod.object({
  * @summary Update a contact
  */
 export const UpdateContactParams = zod.object({
-  "agency_id": zod.number().describe('Unique ID of the agency'),
-  "contact_id": zod.number().describe('Unique ID of the contact to update')
+  "agency_id": zod.coerce.number().describe('Unique ID of the agency'),
+  "contact_id": zod.coerce.number().describe('Unique ID of the contact to update')
 })
 
 export const UpdateContactBody = zod.object({
-  "id": zod.number().optional().describe('Identifiant unique du contact'),
-  "category": zod.number().describe('Contact category → see catalog contact_category (e.g. individual, professional). \*\*Required on creation (POST)\*\*'),
-  "user": zod.number().describe('ID of the responsible negotiator. \*\*Required on creation (POST)\*\*'),
-  "password": zod.string().nullish().describe('Password for Extranet access'),
-  "activity": zod.number().nullish().describe('Main activity (for professionals only) → see catalog contact_activity'),
-  "title": zod.number().nullish().describe('Title → see catalog contact_title (e.g. Mr., Mrs.)'),
-  "firstname": zod.string().nullish().describe('Contact first name'),
-  "lastname": zod.string().nullish().describe('Last name. \*\*Required on creation (POST) if company not provided\*\*'),
-  "company": zod.string().nullish().describe('Company name. \*\*Required on creation (POST) if lastname not provided\*\*'),
-  "vat_number": zod.string().nullish().describe('Company VAT number'),
-  "spouse_title": zod.number().nullish().describe('Spouse title → see catalog contact_title'),
-  "spouse_firstname": zod.string().nullish().describe('Spouse first name'),
-  "spouse_lastname": zod.string().nullish().describe('Spouse last name'),
-  "birthday_at": zod.iso.date().nullish().describe('Date of birth (format YYYY-MM-DD)'),
-  "spouse_birthday_at": zod.iso.date().nullish().describe('Spouse date of birth (format YYYY-MM-DD)'),
-  "email": zod.email().nullish().describe('Email address'),
-  "spouse_email": zod.email().nullish().describe('Email address du conjoint'),
-  "phone": zod.string().nullish().describe('Landline phone'),
-  "mobile": zod.string().nullish().describe('Mobile phone'),
-  "fax": zod.string().nullish().describe('Fax number'),
-  "address": zod.string().nullish().describe('Postal address'),
-  "address_more": zod.string().nullish().describe('Additional address details'),
-  "zipcode": zod.string().nullish().describe('Postal code'),
-  "city": zod.string().nullish().describe('City (name or reference)'),
-  "country": zod.string().nullish().describe('ISO 3166-1 alpha-2 country code'),
-  "nationality": zod.string().nullish().describe('Nationality - ISO 3166-1 alpha-2 country code'),
-  "spouse_nationality": zod.string().nullish().describe('Spouse nationality - ISO 3166-1 alpha-2 country code'),
-  "taxcode": zod.string().nullish().describe('Contact tax code'),
-  "spouse_taxcode": zod.string().nullish().describe('Spouse tax code'),
-  "comment": zod.string().nullish().describe('Free comment'),
-  "relationship": zod.number().nullish().describe('Contact relationship → see catalog contact_relationship'),
-  "civil_status": zod.number().nullish().describe('Marital status → see catalog contact_civil_status'),
-  "children": zod.number().nullish().describe('Number of children'),
-  "website": zod.url().nullish().describe('Contact website'),
-  "mailing": zod.number().nullish().describe('Paper mailing subscription → see catalog subscription'),
-  "emailing": zod.number().nullish().describe('Electronic mailing subscription → see catalog subscription'),
-  "magazine": zod.number().nullish().describe('Magazine subscription → see catalog subscription'),
-  "incoming_action_at": zod.iso.datetime({"offset":true}).nullish().describe('Date of the last incoming action'),
-  "outgoing_action_at": zod.iso.datetime({"offset":true}).nullish().describe('Date of the last outgoing action'),
-  "language": zod.array(zod.string()).optional().describe('ISO 639-1 language codes spoken by the contact'),
+  "id": zod.coerce.number().nullish().describe('Identifiant unique du contact'),
+  "category": zod.coerce.number().describe('Contact category → see catalog contact_category (e.g. individual, professional). \*\*Required on creation (POST)\*\*'),
+  "user": zod.coerce.number().describe('ID of the responsible negotiator. \*\*Required on creation (POST)\*\*'),
+  "password": zod.coerce.string().nullish().describe('Password for Extranet access'),
+  "activity": zod.coerce.number().nullish().describe('Main activity (for professionals only) → see catalog contact_activity'),
+  "title": zod.coerce.number().nullish().describe('Title → see catalog contact_title (e.g. Mr., Mrs.)'),
+  "firstname": zod.coerce.string().nullish().describe('Contact first name'),
+  "lastname": zod.coerce.string().nullish().describe('Last name. \*\*Required on creation (POST) if company not provided\*\*'),
+  "company": zod.coerce.string().nullish().describe('Company name. \*\*Required on creation (POST) if lastname not provided\*\*'),
+  "vat_number": zod.coerce.string().nullish().describe('Company VAT number'),
+  "spouse_title": zod.coerce.number().nullish().describe('Spouse title → see catalog contact_title'),
+  "spouse_firstname": zod.coerce.string().nullish().describe('Spouse first name'),
+  "spouse_lastname": zod.coerce.string().nullish().describe('Spouse last name'),
+  "birthday_at": zod.coerce.string().nullish().describe('Date of birth (format YYYY-MM-DD)'),
+  "spouse_birthday_at": zod.coerce.string().nullish().describe('Spouse date of birth (format YYYY-MM-DD)'),
+  "email": zod.coerce.string().nullish().describe('Email address'),
+  "spouse_email": zod.coerce.string().nullish().describe('Email address du conjoint'),
+  "phone": zod.coerce.string().nullish().describe('Landline phone'),
+  "mobile": zod.coerce.string().nullish().describe('Mobile phone'),
+  "fax": zod.coerce.string().nullish().describe('Fax number'),
+  "address": zod.coerce.string().nullish().describe('Postal address'),
+  "address_more": zod.coerce.string().nullish().describe('Additional address details'),
+  "zipcode": zod.coerce.string().nullish().describe('Postal code'),
+  "city": zod.coerce.string().nullish().describe('City (name or reference)'),
+  "country": zod.coerce.string().nullish().describe('ISO 3166-1 alpha-2 country code'),
+  "nationality": zod.coerce.string().nullish().describe('Nationality - ISO 3166-1 alpha-2 country code'),
+  "spouse_nationality": zod.coerce.string().nullish().describe('Spouse nationality - ISO 3166-1 alpha-2 country code'),
+  "taxcode": zod.coerce.string().nullish().describe('Contact tax code'),
+  "spouse_taxcode": zod.coerce.string().nullish().describe('Spouse tax code'),
+  "comment": zod.coerce.string().nullish().describe('Free comment'),
+  "relationship": zod.coerce.number().nullish().describe('Contact relationship → see catalog contact_relationship'),
+  "civil_status": zod.coerce.number().nullish().describe('Marital status → see catalog contact_civil_status'),
+  "children": zod.coerce.number().nullish().describe('Number of children'),
+  "website": zod.coerce.string().nullish().describe('Contact website'),
+  "mailing": zod.coerce.number().nullish().describe('Paper mailing subscription → see catalog subscription'),
+  "emailing": zod.coerce.number().nullish().describe('Electronic mailing subscription → see catalog subscription'),
+  "magazine": zod.coerce.number().nullish().describe('Magazine subscription → see catalog subscription'),
+  "incoming_action_at": zod.coerce.string().nullish().describe('Date of the last incoming action'),
+  "outgoing_action_at": zod.coerce.string().nullish().describe('Date of the last outgoing action'),
+  "language": zod.array(zod.coerce.string()).nullish().describe('ISO 639-1 language codes spoken by the contact'),
   "tags_customized": zod.array(zod.object({
-  "comment": zod.string().optional()
-})).optional().describe('Agency customized tags'),
-  "created_at": zod.iso.datetime({"offset":true}).optional().describe('Creation date'),
-  "updated_at": zod.iso.datetime({"offset":true}).optional().describe('Last update date')
+  "comment": zod.coerce.string().nullish()
+})).nullish().describe('Agency customized tags'),
+  "created_at": zod.coerce.string().nullish().describe('Creation date'),
+  "updated_at": zod.coerce.string().nullish().describe('Last update date')
 }).describe('Agency client contact (individual or professional)')
 
 export const UpdateContactResponse = zod.object({
-  "id": zod.string().optional().describe('ID of the updated contact (returned as string by the API)')
+  "id": zod.coerce.string().nullish().describe('ID of the updated contact (returned as string by the API)')
 })
 
 
@@ -1090,12 +1090,12 @@ export const UpdateContactResponse = zod.object({
  * @summary Retrieve contact actions history
  */
 export const GetContactActionsParams = zod.object({
-  "agency_id": zod.number().describe('Unique ID of the agency'),
-  "contact_id": zod.number().describe('Identifiant unique du contact')
+  "agency_id": zod.coerce.number().describe('Unique ID of the agency'),
+  "contact_id": zod.coerce.number().describe('Identifiant unique du contact')
 })
 
 export const GetContactActionsQueryParams = zod.object({
-  "user_id": zod.number().optional().describe('Filter actions by user')
+  "user_id": zod.coerce.number().nullish().describe('Filter actions by user')
 })
 
 export const GetContactActionsResponse = zod.looseObject({
@@ -1108,13 +1108,13 @@ export const GetContactActionsResponse = zod.looseObject({
  * @summary Retrieve contact actions history filtered by year
  */
 export const GetContactActionsByYearParams = zod.object({
-  "agency_id": zod.number().describe('Unique ID of the agency'),
-  "contact_id": zod.number().describe('Identifiant unique du contact'),
-  "year": zod.number().describe('Filter year (e.g. 2025)')
+  "agency_id": zod.coerce.number().describe('Unique ID of the agency'),
+  "contact_id": zod.coerce.number().describe('Identifiant unique du contact'),
+  "year": zod.coerce.number().describe('Filter year (e.g. 2025)')
 })
 
 export const GetContactActionsByYearQueryParams = zod.object({
-  "user_id": zod.number().optional().describe('Filter actions by user')
+  "user_id": zod.coerce.number().nullish().describe('Filter actions by user')
 })
 
 export const GetContactActionsByYearResponse = zod.looseObject({
@@ -1135,7 +1135,7 @@ export const GetContactActionsByYearResponse = zod.looseObject({
  * @summary Retrieve the leads list
  */
 export const ListLeadsParams = zod.object({
-  "agency_id": zod.number()
+  "agency_id": zod.coerce.number()
 })
 
 export const listLeadsQueryLimitDefault = 10000;
@@ -1144,111 +1144,111 @@ export const listLeadsQueryLimitMax = 10000;
 export const listLeadsQueryOffsetDefault = 0;
 
 export const ListLeadsQueryParams = zod.object({
-  "limit": zod.number().max(listLeadsQueryLimitMax).default(listLeadsQueryLimitDefault),
-  "offset": zod.number().default(listLeadsQueryOffsetDefault),
-  "timestamp": zod.number().optional()
+  "limit": zod.coerce.number().max(listLeadsQueryLimitMax).default(listLeadsQueryLimitDefault),
+  "offset": zod.coerce.number().default(listLeadsQueryOffsetDefault),
+  "timestamp": zod.coerce.number().nullish()
 })
 
 export const ListLeadsResponse = zod.object({
-  "total_items": zod.number().optional().describe('Total number of items (regardless of pagination)'),
-  "timestamp": zod.number().optional().describe('UNIX timestamp of the most recent item in the list')
+  "total_items": zod.coerce.number().nullish().describe('Total number of items (regardless of pagination)'),
+  "timestamp": zod.coerce.number().nullish().describe('UNIX timestamp of the most recent item in the list')
 }).and(zod.object({
   "leads": zod.array(zod.object({
-  "id": zod.number().optional().describe('Unique ID of the lead'),
-  "parent": zod.number().nullish().describe('Parent ID (to skip duplicates)'),
-  "provider": zod.string().optional().describe('Source provider ID (returned as string)'),
-  "agency": zod.string().optional().describe('Agency ID (returned as string)'),
-  "type": zod.string().describe('Lead type → see catalog lead_type. \*\*Required on creation (POST)\*\*'),
-  "step": zod.string().optional().describe('Lead step → see catalog lead_step'),
-  "date": zod.iso.datetime({"offset":true}).optional().describe('Contact date (format YYYY-MM-DD HH:MM:SS)'),
-  "start_at": zod.string().nullish().describe('Rental start date criteria (MySQL format)'),
-  "end_at": zod.string().nullish().describe('Rental end date criteria (MySQL format)'),
-  "reference": zod.string().describe('Your own unique reference for this lead. \*\*Required on creation (POST)\*\*'),
-  "lastname": zod.string().nullish().describe('Prospect last name'),
-  "firstname": zod.string().nullish().describe('Prospect first name'),
-  "email": zod.email().nullish().describe('Email address du prospect'),
-  "phone": zod.string().nullish().describe('Prospect phone number'),
-  "fax": zod.string().nullish().describe('Prospect fax number'),
-  "mobile": zod.string().nullish().describe('Prospect mobile number'),
-  "method": zod.string().nullish().describe('Contact method'),
-  "language": zod.string().optional().describe('ISO 639-1 language code du prospect'),
-  "country": zod.string().optional().describe('ISO 3166-1 alpha-2 country code du prospect'),
-  "title": zod.number().nullish().describe('Prospect title → see catalog contact_title'),
-  "address": zod.string().nullish().describe('Postal address du prospect'),
-  "address_more": zod.string().nullish().describe('Additional address details du prospect'),
-  "zipcode": zod.string().nullish().describe('Postal code du prospect'),
-  "city": zod.string().nullish().describe('Prospect city'),
-  "referral": zod.string().nullish().describe('Lead origin → see catalog origine'),
-  "subreferral": zod.string().nullish().describe('Lead sub-origin'),
-  "recipient_lastname": zod.string().nullish().describe('Recipient last name (for send to a friend function)'),
-  "recipient_firstname": zod.string().nullish().describe('Recipient first name (for send to a friend function)'),
-  "recipient_email": zod.email().nullish().describe('Recipient email (for send to a friend function)'),
-  "property": zod.number().nullish().describe('ID of the property linked to the lead'),
-  "property_reference": zod.string().nullish().describe('Property reference'),
-  "property_address": zod.string().nullish().describe('Property address'),
-  "property_address_more": zod.string().nullish().describe('Additional address details du bien'),
-  "property_zipcode": zod.string().nullish().describe('Postal code du bien'),
-  "property_city": zod.string().nullish().describe('Property city'),
-  "property_country": zod.string().nullish().describe('Property country (ISO 3166-1 alpha-2)'),
-  "property_category": zod.number().nullish().describe('Property category → see catalog property_category'),
-  "property_types": zod.string().nullish().describe('Property types separated by comma (e.g. \'1,2,3\') → see catalog property_type'),
-  "property_subtype": zod.string().nullish().describe('Property subtype → see catalog property_subtype'),
-  "property_view_landscape": zod.number().nullish().describe('Property view landscape → see catalog property_view_landscape'),
-  "property_view_type": zod.number().nullish().describe('View type → see catalog property_view_type'),
-  "property_location": zod.number().nullish().describe('Property location → see catalog property_location'),
-  "contact": zod.number().nullish().describe('ID of the contact linked to the lead'),
-  "request": zod.number().nullish().describe('ID of the request linked to the lead'),
-  "user": zod.number().nullish().describe('ID of the user linked to the lead'),
+  "id": zod.coerce.number().nullish().describe('Unique ID of the lead'),
+  "parent": zod.coerce.number().nullish().describe('Parent ID (to skip duplicates)'),
+  "provider": zod.coerce.string().nullish().describe('Source provider ID (returned as string)'),
+  "agency": zod.coerce.string().nullish().describe('Agency ID (returned as string)'),
+  "type": zod.coerce.string().describe('Lead type → see catalog lead_type. \*\*Required on creation (POST)\*\*'),
+  "step": zod.coerce.string().nullish().describe('Lead step → see catalog lead_step'),
+  "date": zod.coerce.string().nullish().describe('Contact date (format YYYY-MM-DD HH:MM:SS)'),
+  "start_at": zod.coerce.string().nullish().describe('Rental start date criteria (MySQL format)'),
+  "end_at": zod.coerce.string().nullish().describe('Rental end date criteria (MySQL format)'),
+  "reference": zod.coerce.string().describe('Your own unique reference for this lead. \*\*Required on creation (POST)\*\*'),
+  "lastname": zod.coerce.string().nullish().describe('Prospect last name'),
+  "firstname": zod.coerce.string().nullish().describe('Prospect first name'),
+  "email": zod.coerce.string().nullish().describe('Email address du prospect'),
+  "phone": zod.coerce.string().nullish().describe('Prospect phone number'),
+  "fax": zod.coerce.string().nullish().describe('Prospect fax number'),
+  "mobile": zod.coerce.string().nullish().describe('Prospect mobile number'),
+  "method": zod.coerce.string().nullish().describe('Contact method'),
+  "language": zod.coerce.string().nullish().describe('ISO 639-1 language code du prospect'),
+  "country": zod.coerce.string().nullish().describe('ISO 3166-1 alpha-2 country code du prospect'),
+  "title": zod.coerce.number().nullish().describe('Prospect title → see catalog contact_title'),
+  "address": zod.coerce.string().nullish().describe('Postal address du prospect'),
+  "address_more": zod.coerce.string().nullish().describe('Additional address details du prospect'),
+  "zipcode": zod.coerce.string().nullish().describe('Postal code du prospect'),
+  "city": zod.coerce.string().nullish().describe('Prospect city'),
+  "referral": zod.coerce.string().nullish().describe('Lead origin → see catalog origine'),
+  "subreferral": zod.coerce.string().nullish().describe('Lead sub-origin'),
+  "recipient_lastname": zod.coerce.string().nullish().describe('Recipient last name (for send to a friend function)'),
+  "recipient_firstname": zod.coerce.string().nullish().describe('Recipient first name (for send to a friend function)'),
+  "recipient_email": zod.coerce.string().nullish().describe('Recipient email (for send to a friend function)'),
+  "property": zod.coerce.number().nullish().describe('ID of the property linked to the lead'),
+  "property_reference": zod.coerce.string().nullish().describe('Property reference'),
+  "property_address": zod.coerce.string().nullish().describe('Property address'),
+  "property_address_more": zod.coerce.string().nullish().describe('Additional address details du bien'),
+  "property_zipcode": zod.coerce.string().nullish().describe('Postal code du bien'),
+  "property_city": zod.coerce.string().nullish().describe('Property city'),
+  "property_country": zod.coerce.string().nullish().describe('Property country (ISO 3166-1 alpha-2)'),
+  "property_category": zod.coerce.number().nullish().describe('Property category → see catalog property_category'),
+  "property_types": zod.coerce.string().nullish().describe('Property types separated by comma (e.g. \'1,2,3\') → see catalog property_type'),
+  "property_subtype": zod.coerce.string().nullish().describe('Property subtype → see catalog property_subtype'),
+  "property_view_landscape": zod.coerce.number().nullish().describe('Property view landscape → see catalog property_view_landscape'),
+  "property_view_type": zod.coerce.number().nullish().describe('View type → see catalog property_view_type'),
+  "property_location": zod.coerce.number().nullish().describe('Property location → see catalog property_location'),
+  "contact": zod.coerce.number().nullish().describe('ID of the contact linked to the lead'),
+  "request": zod.coerce.number().nullish().describe('ID of the request linked to the lead'),
+  "user": zod.coerce.number().nullish().describe('ID of the user linked to the lead'),
   "opened": zod.object({
-  "date": zod.string().nullish().describe('Opening date'),
-  "user": zod.string().nullish().describe('ID of the user who opened the lead')
+  "date": zod.coerce.string().nullish().describe('Opening date'),
+  "user": zod.coerce.string().nullish().describe('ID of the user who opened the lead')
 }).nullish().describe('Lead opening date and user'),
   "assigned": zod.object({
-  "date": zod.string().nullish().describe('Assignment date'),
-  "user": zod.string().nullish().describe('ID of the assigned user')
+  "date": zod.coerce.string().nullish().describe('Assignment date'),
+  "user": zod.coerce.string().nullish().describe('ID of the assigned user')
 }).nullish().describe('Lead assignment date and user'),
   "closed": zod.object({
-  "date": zod.string().nullish().describe('Closing date'),
-  "user": zod.string().nullish().describe('ID of the user who closed the lead')
+  "date": zod.coerce.string().nullish().describe('Closing date'),
+  "user": zod.coerce.string().nullish().describe('ID of the user who closed the lead')
 }).nullish().describe('Lead closing date and user'),
-  "message": zod.string().nullish().describe('Free text message from the prospect'),
-  "area_min": zod.number().nullish().describe('Minimum area criteria'),
-  "area_max": zod.number().nullish().describe('Maximum area criteria'),
-  "area_unit": zod.number().nullish().describe('Area unit → see catalog unit_area'),
-  "room_min": zod.number().nullish().describe('Minimum number of rooms'),
-  "room_max": zod.number().nullish().describe('Maximum number of rooms'),
-  "bedroom_min": zod.number().nullish().describe('Number of bedrooms minimum'),
-  "bedroom_max": zod.number().nullish().describe('Number of bedrooms maximum'),
-  "price_min": zod.number().nullish().describe('Minimum price criteria'),
-  "price_max": zod.number().nullish().describe('Maximum price criteria'),
-  "currency": zod.string().nullish().describe('Currency ISO 4217 du prospect'),
+  "message": zod.coerce.string().nullish().describe('Free text message from the prospect'),
+  "area_min": zod.coerce.number().nullish().describe('Minimum area criteria'),
+  "area_max": zod.coerce.number().nullish().describe('Maximum area criteria'),
+  "area_unit": zod.coerce.number().nullish().describe('Area unit → see catalog unit_area'),
+  "room_min": zod.coerce.number().nullish().describe('Minimum number of rooms'),
+  "room_max": zod.coerce.number().nullish().describe('Maximum number of rooms'),
+  "bedroom_min": zod.coerce.number().nullish().describe('Number of bedrooms minimum'),
+  "bedroom_max": zod.coerce.number().nullish().describe('Number of bedrooms maximum'),
+  "price_min": zod.coerce.number().nullish().describe('Minimum price criteria'),
+  "price_max": zod.coerce.number().nullish().describe('Maximum price criteria'),
+  "currency": zod.coerce.string().nullish().describe('Currency ISO 4217 du prospect'),
   "criteria": zod.object({
-  "category": zod.number().nullish(),
+  "category": zod.coerce.number().nullish(),
   "area": zod.object({
-  "min": zod.number().nullish(),
-  "max": zod.number().nullish()
-}).optional(),
+  "min": zod.coerce.number().nullish(),
+  "max": zod.coerce.number().nullish()
+}).nullish(),
   "room": zod.object({
-  "min": zod.number().nullish(),
-  "max": zod.number().nullish()
-}).optional(),
+  "min": zod.coerce.number().nullish(),
+  "max": zod.coerce.number().nullish()
+}).nullish(),
   "price": zod.object({
-  "min": zod.number().nullish(),
-  "max": zod.number().nullish(),
-  "currency": zod.string().nullish()
-}).optional(),
+  "min": zod.coerce.number().nullish(),
+  "max": zod.coerce.number().nullish(),
+  "currency": zod.coerce.string().nullish()
+}).nullish(),
   "cities": zod.array(zod.looseObject({
 
-})).optional(),
+})).nullish(),
   "locations": zod.array(zod.looseObject({
 
-})).optional(),
-  "types": zod.array(zod.number()).optional(),
-  "subtype": zod.number().nullish()
+})).nullish(),
+  "types": zod.array(zod.coerce.number()).nullish(),
+  "subtype": zod.coerce.number().nullish()
 }).nullish().describe('Prospect search criteria'),
-  "created_at": zod.iso.datetime({"offset":true}).optional().describe('Creation date'),
-  "updated_at": zod.iso.datetime({"offset":true}).optional().describe('Last update date')
-}).describe('Incoming lead (prospect from a portal or form)')).optional()
+  "created_at": zod.coerce.string().nullish().describe('Creation date'),
+  "updated_at": zod.coerce.string().nullish().describe('Last update date')
+}).describe('Incoming lead (prospect from a portal or form)')).nullish()
 }))
 
 
@@ -1256,110 +1256,110 @@ export const ListLeadsResponse = zod.object({
  * @summary Create a new lead
  */
 export const CreateLeadParams = zod.object({
-  "agency_id": zod.number()
+  "agency_id": zod.coerce.number()
 })
 
 export const CreateLeadBody = zod.object({
-  "id": zod.number().optional().describe('Unique ID of the lead'),
-  "parent": zod.number().nullish().describe('Parent ID (to skip duplicates)'),
-  "provider": zod.string().optional().describe('Source provider ID (returned as string)'),
-  "agency": zod.string().optional().describe('Agency ID (returned as string)'),
-  "type": zod.string().describe('Lead type → see catalog lead_type. \*\*Required on creation (POST)\*\*'),
-  "step": zod.string().optional().describe('Lead step → see catalog lead_step'),
-  "date": zod.iso.datetime({"offset":true}).optional().describe('Contact date (format YYYY-MM-DD HH:MM:SS)'),
-  "start_at": zod.string().nullish().describe('Rental start date criteria (MySQL format)'),
-  "end_at": zod.string().nullish().describe('Rental end date criteria (MySQL format)'),
-  "reference": zod.string().describe('Your own unique reference for this lead. \*\*Required on creation (POST)\*\*'),
-  "lastname": zod.string().nullish().describe('Prospect last name'),
-  "firstname": zod.string().nullish().describe('Prospect first name'),
-  "email": zod.email().nullish().describe('Email address du prospect'),
-  "phone": zod.string().nullish().describe('Prospect phone number'),
-  "fax": zod.string().nullish().describe('Prospect fax number'),
-  "mobile": zod.string().nullish().describe('Prospect mobile number'),
-  "method": zod.string().nullish().describe('Contact method'),
-  "language": zod.string().optional().describe('ISO 639-1 language code du prospect'),
-  "country": zod.string().optional().describe('ISO 3166-1 alpha-2 country code du prospect'),
-  "title": zod.number().nullish().describe('Prospect title → see catalog contact_title'),
-  "address": zod.string().nullish().describe('Postal address du prospect'),
-  "address_more": zod.string().nullish().describe('Additional address details du prospect'),
-  "zipcode": zod.string().nullish().describe('Postal code du prospect'),
-  "city": zod.string().nullish().describe('Prospect city'),
-  "referral": zod.string().nullish().describe('Lead origin → see catalog origine'),
-  "subreferral": zod.string().nullish().describe('Lead sub-origin'),
-  "recipient_lastname": zod.string().nullish().describe('Recipient last name (for send to a friend function)'),
-  "recipient_firstname": zod.string().nullish().describe('Recipient first name (for send to a friend function)'),
-  "recipient_email": zod.email().nullish().describe('Recipient email (for send to a friend function)'),
-  "property": zod.number().nullish().describe('ID of the property linked to the lead'),
-  "property_reference": zod.string().nullish().describe('Property reference'),
-  "property_address": zod.string().nullish().describe('Property address'),
-  "property_address_more": zod.string().nullish().describe('Additional address details du bien'),
-  "property_zipcode": zod.string().nullish().describe('Postal code du bien'),
-  "property_city": zod.string().nullish().describe('Property city'),
-  "property_country": zod.string().nullish().describe('Property country (ISO 3166-1 alpha-2)'),
-  "property_category": zod.number().nullish().describe('Property category → see catalog property_category'),
-  "property_types": zod.string().nullish().describe('Property types separated by comma (e.g. \'1,2,3\') → see catalog property_type'),
-  "property_subtype": zod.string().nullish().describe('Property subtype → see catalog property_subtype'),
-  "property_view_landscape": zod.number().nullish().describe('Property view landscape → see catalog property_view_landscape'),
-  "property_view_type": zod.number().nullish().describe('View type → see catalog property_view_type'),
-  "property_location": zod.number().nullish().describe('Property location → see catalog property_location'),
-  "contact": zod.number().nullish().describe('ID of the contact linked to the lead'),
-  "request": zod.number().nullish().describe('ID of the request linked to the lead'),
-  "user": zod.number().nullish().describe('ID of the user linked to the lead'),
+  "id": zod.coerce.number().nullish().describe('Unique ID of the lead'),
+  "parent": zod.coerce.number().nullish().describe('Parent ID (to skip duplicates)'),
+  "provider": zod.coerce.string().nullish().describe('Source provider ID (returned as string)'),
+  "agency": zod.coerce.string().nullish().describe('Agency ID (returned as string)'),
+  "type": zod.coerce.string().describe('Lead type → see catalog lead_type. \*\*Required on creation (POST)\*\*'),
+  "step": zod.coerce.string().nullish().describe('Lead step → see catalog lead_step'),
+  "date": zod.coerce.string().nullish().describe('Contact date (format YYYY-MM-DD HH:MM:SS)'),
+  "start_at": zod.coerce.string().nullish().describe('Rental start date criteria (MySQL format)'),
+  "end_at": zod.coerce.string().nullish().describe('Rental end date criteria (MySQL format)'),
+  "reference": zod.coerce.string().describe('Your own unique reference for this lead. \*\*Required on creation (POST)\*\*'),
+  "lastname": zod.coerce.string().nullish().describe('Prospect last name'),
+  "firstname": zod.coerce.string().nullish().describe('Prospect first name'),
+  "email": zod.coerce.string().nullish().describe('Email address du prospect'),
+  "phone": zod.coerce.string().nullish().describe('Prospect phone number'),
+  "fax": zod.coerce.string().nullish().describe('Prospect fax number'),
+  "mobile": zod.coerce.string().nullish().describe('Prospect mobile number'),
+  "method": zod.coerce.string().nullish().describe('Contact method'),
+  "language": zod.coerce.string().nullish().describe('ISO 639-1 language code du prospect'),
+  "country": zod.coerce.string().nullish().describe('ISO 3166-1 alpha-2 country code du prospect'),
+  "title": zod.coerce.number().nullish().describe('Prospect title → see catalog contact_title'),
+  "address": zod.coerce.string().nullish().describe('Postal address du prospect'),
+  "address_more": zod.coerce.string().nullish().describe('Additional address details du prospect'),
+  "zipcode": zod.coerce.string().nullish().describe('Postal code du prospect'),
+  "city": zod.coerce.string().nullish().describe('Prospect city'),
+  "referral": zod.coerce.string().nullish().describe('Lead origin → see catalog origine'),
+  "subreferral": zod.coerce.string().nullish().describe('Lead sub-origin'),
+  "recipient_lastname": zod.coerce.string().nullish().describe('Recipient last name (for send to a friend function)'),
+  "recipient_firstname": zod.coerce.string().nullish().describe('Recipient first name (for send to a friend function)'),
+  "recipient_email": zod.coerce.string().nullish().describe('Recipient email (for send to a friend function)'),
+  "property": zod.coerce.number().nullish().describe('ID of the property linked to the lead'),
+  "property_reference": zod.coerce.string().nullish().describe('Property reference'),
+  "property_address": zod.coerce.string().nullish().describe('Property address'),
+  "property_address_more": zod.coerce.string().nullish().describe('Additional address details du bien'),
+  "property_zipcode": zod.coerce.string().nullish().describe('Postal code du bien'),
+  "property_city": zod.coerce.string().nullish().describe('Property city'),
+  "property_country": zod.coerce.string().nullish().describe('Property country (ISO 3166-1 alpha-2)'),
+  "property_category": zod.coerce.number().nullish().describe('Property category → see catalog property_category'),
+  "property_types": zod.coerce.string().nullish().describe('Property types separated by comma (e.g. \'1,2,3\') → see catalog property_type'),
+  "property_subtype": zod.coerce.string().nullish().describe('Property subtype → see catalog property_subtype'),
+  "property_view_landscape": zod.coerce.number().nullish().describe('Property view landscape → see catalog property_view_landscape'),
+  "property_view_type": zod.coerce.number().nullish().describe('View type → see catalog property_view_type'),
+  "property_location": zod.coerce.number().nullish().describe('Property location → see catalog property_location'),
+  "contact": zod.coerce.number().nullish().describe('ID of the contact linked to the lead'),
+  "request": zod.coerce.number().nullish().describe('ID of the request linked to the lead'),
+  "user": zod.coerce.number().nullish().describe('ID of the user linked to the lead'),
   "opened": zod.object({
-  "date": zod.string().nullish().describe('Opening date'),
-  "user": zod.string().nullish().describe('ID of the user who opened the lead')
+  "date": zod.coerce.string().nullish().describe('Opening date'),
+  "user": zod.coerce.string().nullish().describe('ID of the user who opened the lead')
 }).nullish().describe('Lead opening date and user'),
   "assigned": zod.object({
-  "date": zod.string().nullish().describe('Assignment date'),
-  "user": zod.string().nullish().describe('ID of the assigned user')
+  "date": zod.coerce.string().nullish().describe('Assignment date'),
+  "user": zod.coerce.string().nullish().describe('ID of the assigned user')
 }).nullish().describe('Lead assignment date and user'),
   "closed": zod.object({
-  "date": zod.string().nullish().describe('Closing date'),
-  "user": zod.string().nullish().describe('ID of the user who closed the lead')
+  "date": zod.coerce.string().nullish().describe('Closing date'),
+  "user": zod.coerce.string().nullish().describe('ID of the user who closed the lead')
 }).nullish().describe('Lead closing date and user'),
-  "message": zod.string().nullish().describe('Free text message from the prospect'),
-  "area_min": zod.number().nullish().describe('Minimum area criteria'),
-  "area_max": zod.number().nullish().describe('Maximum area criteria'),
-  "area_unit": zod.number().nullish().describe('Area unit → see catalog unit_area'),
-  "room_min": zod.number().nullish().describe('Minimum number of rooms'),
-  "room_max": zod.number().nullish().describe('Maximum number of rooms'),
-  "bedroom_min": zod.number().nullish().describe('Number of bedrooms minimum'),
-  "bedroom_max": zod.number().nullish().describe('Number of bedrooms maximum'),
-  "price_min": zod.number().nullish().describe('Minimum price criteria'),
-  "price_max": zod.number().nullish().describe('Maximum price criteria'),
-  "currency": zod.string().nullish().describe('Currency ISO 4217 du prospect'),
+  "message": zod.coerce.string().nullish().describe('Free text message from the prospect'),
+  "area_min": zod.coerce.number().nullish().describe('Minimum area criteria'),
+  "area_max": zod.coerce.number().nullish().describe('Maximum area criteria'),
+  "area_unit": zod.coerce.number().nullish().describe('Area unit → see catalog unit_area'),
+  "room_min": zod.coerce.number().nullish().describe('Minimum number of rooms'),
+  "room_max": zod.coerce.number().nullish().describe('Maximum number of rooms'),
+  "bedroom_min": zod.coerce.number().nullish().describe('Number of bedrooms minimum'),
+  "bedroom_max": zod.coerce.number().nullish().describe('Number of bedrooms maximum'),
+  "price_min": zod.coerce.number().nullish().describe('Minimum price criteria'),
+  "price_max": zod.coerce.number().nullish().describe('Maximum price criteria'),
+  "currency": zod.coerce.string().nullish().describe('Currency ISO 4217 du prospect'),
   "criteria": zod.object({
-  "category": zod.number().nullish(),
+  "category": zod.coerce.number().nullish(),
   "area": zod.object({
-  "min": zod.number().nullish(),
-  "max": zod.number().nullish()
-}).optional(),
+  "min": zod.coerce.number().nullish(),
+  "max": zod.coerce.number().nullish()
+}).nullish(),
   "room": zod.object({
-  "min": zod.number().nullish(),
-  "max": zod.number().nullish()
-}).optional(),
+  "min": zod.coerce.number().nullish(),
+  "max": zod.coerce.number().nullish()
+}).nullish(),
   "price": zod.object({
-  "min": zod.number().nullish(),
-  "max": zod.number().nullish(),
-  "currency": zod.string().nullish()
-}).optional(),
+  "min": zod.coerce.number().nullish(),
+  "max": zod.coerce.number().nullish(),
+  "currency": zod.coerce.string().nullish()
+}).nullish(),
   "cities": zod.array(zod.looseObject({
 
-})).optional(),
+})).nullish(),
   "locations": zod.array(zod.looseObject({
 
-})).optional(),
-  "types": zod.array(zod.number()).optional(),
-  "subtype": zod.number().nullish()
+})).nullish(),
+  "types": zod.array(zod.coerce.number()).nullish(),
+  "subtype": zod.coerce.number().nullish()
 }).nullish().describe('Prospect search criteria'),
-  "created_at": zod.iso.datetime({"offset":true}).optional().describe('Creation date'),
-  "updated_at": zod.iso.datetime({"offset":true}).optional().describe('Last update date')
+  "created_at": zod.coerce.string().nullish().describe('Creation date'),
+  "updated_at": zod.coerce.string().nullish().describe('Last update date')
 }).describe('Incoming lead (prospect from a portal or form)')
 
 export const CreateLeadResponse = zod.object({
-  "id": zod.number().optional().describe('ID of the created lead'),
-  "created_at": zod.iso.datetime({"offset":true}).optional().describe('Creation date'),
-  "updated_at": zod.iso.datetime({"offset":true}).optional().describe('Last update date')
+  "id": zod.coerce.number().nullish().describe('ID of the created lead'),
+  "created_at": zod.coerce.string().nullish().describe('Creation date'),
+  "updated_at": zod.coerce.string().nullish().describe('Last update date')
 })
 
 
@@ -1368,111 +1368,111 @@ export const CreateLeadResponse = zod.object({
  * @summary Update a lead
  */
 export const UpdateLeadParams = zod.object({
-  "agency_id": zod.number().describe('Unique ID of the agency'),
-  "lead_id": zod.number().describe('Unique ID of the lead to update')
+  "agency_id": zod.coerce.number().describe('Unique ID of the agency'),
+  "lead_id": zod.coerce.number().describe('Unique ID of the lead to update')
 })
 
 export const UpdateLeadBody = zod.object({
-  "id": zod.number().optional().describe('Unique ID of the lead'),
-  "parent": zod.number().nullish().describe('Parent ID (to skip duplicates)'),
-  "provider": zod.string().optional().describe('Source provider ID (returned as string)'),
-  "agency": zod.string().optional().describe('Agency ID (returned as string)'),
-  "type": zod.string().describe('Lead type → see catalog lead_type. \*\*Required on creation (POST)\*\*'),
-  "step": zod.string().optional().describe('Lead step → see catalog lead_step'),
-  "date": zod.iso.datetime({"offset":true}).optional().describe('Contact date (format YYYY-MM-DD HH:MM:SS)'),
-  "start_at": zod.string().nullish().describe('Rental start date criteria (MySQL format)'),
-  "end_at": zod.string().nullish().describe('Rental end date criteria (MySQL format)'),
-  "reference": zod.string().describe('Your own unique reference for this lead. \*\*Required on creation (POST)\*\*'),
-  "lastname": zod.string().nullish().describe('Prospect last name'),
-  "firstname": zod.string().nullish().describe('Prospect first name'),
-  "email": zod.email().nullish().describe('Email address du prospect'),
-  "phone": zod.string().nullish().describe('Prospect phone number'),
-  "fax": zod.string().nullish().describe('Prospect fax number'),
-  "mobile": zod.string().nullish().describe('Prospect mobile number'),
-  "method": zod.string().nullish().describe('Contact method'),
-  "language": zod.string().optional().describe('ISO 639-1 language code du prospect'),
-  "country": zod.string().optional().describe('ISO 3166-1 alpha-2 country code du prospect'),
-  "title": zod.number().nullish().describe('Prospect title → see catalog contact_title'),
-  "address": zod.string().nullish().describe('Postal address du prospect'),
-  "address_more": zod.string().nullish().describe('Additional address details du prospect'),
-  "zipcode": zod.string().nullish().describe('Postal code du prospect'),
-  "city": zod.string().nullish().describe('Prospect city'),
-  "referral": zod.string().nullish().describe('Lead origin → see catalog origine'),
-  "subreferral": zod.string().nullish().describe('Lead sub-origin'),
-  "recipient_lastname": zod.string().nullish().describe('Recipient last name (for send to a friend function)'),
-  "recipient_firstname": zod.string().nullish().describe('Recipient first name (for send to a friend function)'),
-  "recipient_email": zod.email().nullish().describe('Recipient email (for send to a friend function)'),
-  "property": zod.number().nullish().describe('ID of the property linked to the lead'),
-  "property_reference": zod.string().nullish().describe('Property reference'),
-  "property_address": zod.string().nullish().describe('Property address'),
-  "property_address_more": zod.string().nullish().describe('Additional address details du bien'),
-  "property_zipcode": zod.string().nullish().describe('Postal code du bien'),
-  "property_city": zod.string().nullish().describe('Property city'),
-  "property_country": zod.string().nullish().describe('Property country (ISO 3166-1 alpha-2)'),
-  "property_category": zod.number().nullish().describe('Property category → see catalog property_category'),
-  "property_types": zod.string().nullish().describe('Property types separated by comma (e.g. \'1,2,3\') → see catalog property_type'),
-  "property_subtype": zod.string().nullish().describe('Property subtype → see catalog property_subtype'),
-  "property_view_landscape": zod.number().nullish().describe('Property view landscape → see catalog property_view_landscape'),
-  "property_view_type": zod.number().nullish().describe('View type → see catalog property_view_type'),
-  "property_location": zod.number().nullish().describe('Property location → see catalog property_location'),
-  "contact": zod.number().nullish().describe('ID of the contact linked to the lead'),
-  "request": zod.number().nullish().describe('ID of the request linked to the lead'),
-  "user": zod.number().nullish().describe('ID of the user linked to the lead'),
+  "id": zod.coerce.number().nullish().describe('Unique ID of the lead'),
+  "parent": zod.coerce.number().nullish().describe('Parent ID (to skip duplicates)'),
+  "provider": zod.coerce.string().nullish().describe('Source provider ID (returned as string)'),
+  "agency": zod.coerce.string().nullish().describe('Agency ID (returned as string)'),
+  "type": zod.coerce.string().describe('Lead type → see catalog lead_type. \*\*Required on creation (POST)\*\*'),
+  "step": zod.coerce.string().nullish().describe('Lead step → see catalog lead_step'),
+  "date": zod.coerce.string().nullish().describe('Contact date (format YYYY-MM-DD HH:MM:SS)'),
+  "start_at": zod.coerce.string().nullish().describe('Rental start date criteria (MySQL format)'),
+  "end_at": zod.coerce.string().nullish().describe('Rental end date criteria (MySQL format)'),
+  "reference": zod.coerce.string().describe('Your own unique reference for this lead. \*\*Required on creation (POST)\*\*'),
+  "lastname": zod.coerce.string().nullish().describe('Prospect last name'),
+  "firstname": zod.coerce.string().nullish().describe('Prospect first name'),
+  "email": zod.coerce.string().nullish().describe('Email address du prospect'),
+  "phone": zod.coerce.string().nullish().describe('Prospect phone number'),
+  "fax": zod.coerce.string().nullish().describe('Prospect fax number'),
+  "mobile": zod.coerce.string().nullish().describe('Prospect mobile number'),
+  "method": zod.coerce.string().nullish().describe('Contact method'),
+  "language": zod.coerce.string().nullish().describe('ISO 639-1 language code du prospect'),
+  "country": zod.coerce.string().nullish().describe('ISO 3166-1 alpha-2 country code du prospect'),
+  "title": zod.coerce.number().nullish().describe('Prospect title → see catalog contact_title'),
+  "address": zod.coerce.string().nullish().describe('Postal address du prospect'),
+  "address_more": zod.coerce.string().nullish().describe('Additional address details du prospect'),
+  "zipcode": zod.coerce.string().nullish().describe('Postal code du prospect'),
+  "city": zod.coerce.string().nullish().describe('Prospect city'),
+  "referral": zod.coerce.string().nullish().describe('Lead origin → see catalog origine'),
+  "subreferral": zod.coerce.string().nullish().describe('Lead sub-origin'),
+  "recipient_lastname": zod.coerce.string().nullish().describe('Recipient last name (for send to a friend function)'),
+  "recipient_firstname": zod.coerce.string().nullish().describe('Recipient first name (for send to a friend function)'),
+  "recipient_email": zod.coerce.string().nullish().describe('Recipient email (for send to a friend function)'),
+  "property": zod.coerce.number().nullish().describe('ID of the property linked to the lead'),
+  "property_reference": zod.coerce.string().nullish().describe('Property reference'),
+  "property_address": zod.coerce.string().nullish().describe('Property address'),
+  "property_address_more": zod.coerce.string().nullish().describe('Additional address details du bien'),
+  "property_zipcode": zod.coerce.string().nullish().describe('Postal code du bien'),
+  "property_city": zod.coerce.string().nullish().describe('Property city'),
+  "property_country": zod.coerce.string().nullish().describe('Property country (ISO 3166-1 alpha-2)'),
+  "property_category": zod.coerce.number().nullish().describe('Property category → see catalog property_category'),
+  "property_types": zod.coerce.string().nullish().describe('Property types separated by comma (e.g. \'1,2,3\') → see catalog property_type'),
+  "property_subtype": zod.coerce.string().nullish().describe('Property subtype → see catalog property_subtype'),
+  "property_view_landscape": zod.coerce.number().nullish().describe('Property view landscape → see catalog property_view_landscape'),
+  "property_view_type": zod.coerce.number().nullish().describe('View type → see catalog property_view_type'),
+  "property_location": zod.coerce.number().nullish().describe('Property location → see catalog property_location'),
+  "contact": zod.coerce.number().nullish().describe('ID of the contact linked to the lead'),
+  "request": zod.coerce.number().nullish().describe('ID of the request linked to the lead'),
+  "user": zod.coerce.number().nullish().describe('ID of the user linked to the lead'),
   "opened": zod.object({
-  "date": zod.string().nullish().describe('Opening date'),
-  "user": zod.string().nullish().describe('ID of the user who opened the lead')
+  "date": zod.coerce.string().nullish().describe('Opening date'),
+  "user": zod.coerce.string().nullish().describe('ID of the user who opened the lead')
 }).nullish().describe('Lead opening date and user'),
   "assigned": zod.object({
-  "date": zod.string().nullish().describe('Assignment date'),
-  "user": zod.string().nullish().describe('ID of the assigned user')
+  "date": zod.coerce.string().nullish().describe('Assignment date'),
+  "user": zod.coerce.string().nullish().describe('ID of the assigned user')
 }).nullish().describe('Lead assignment date and user'),
   "closed": zod.object({
-  "date": zod.string().nullish().describe('Closing date'),
-  "user": zod.string().nullish().describe('ID of the user who closed the lead')
+  "date": zod.coerce.string().nullish().describe('Closing date'),
+  "user": zod.coerce.string().nullish().describe('ID of the user who closed the lead')
 }).nullish().describe('Lead closing date and user'),
-  "message": zod.string().nullish().describe('Free text message from the prospect'),
-  "area_min": zod.number().nullish().describe('Minimum area criteria'),
-  "area_max": zod.number().nullish().describe('Maximum area criteria'),
-  "area_unit": zod.number().nullish().describe('Area unit → see catalog unit_area'),
-  "room_min": zod.number().nullish().describe('Minimum number of rooms'),
-  "room_max": zod.number().nullish().describe('Maximum number of rooms'),
-  "bedroom_min": zod.number().nullish().describe('Number of bedrooms minimum'),
-  "bedroom_max": zod.number().nullish().describe('Number of bedrooms maximum'),
-  "price_min": zod.number().nullish().describe('Minimum price criteria'),
-  "price_max": zod.number().nullish().describe('Maximum price criteria'),
-  "currency": zod.string().nullish().describe('Currency ISO 4217 du prospect'),
+  "message": zod.coerce.string().nullish().describe('Free text message from the prospect'),
+  "area_min": zod.coerce.number().nullish().describe('Minimum area criteria'),
+  "area_max": zod.coerce.number().nullish().describe('Maximum area criteria'),
+  "area_unit": zod.coerce.number().nullish().describe('Area unit → see catalog unit_area'),
+  "room_min": zod.coerce.number().nullish().describe('Minimum number of rooms'),
+  "room_max": zod.coerce.number().nullish().describe('Maximum number of rooms'),
+  "bedroom_min": zod.coerce.number().nullish().describe('Number of bedrooms minimum'),
+  "bedroom_max": zod.coerce.number().nullish().describe('Number of bedrooms maximum'),
+  "price_min": zod.coerce.number().nullish().describe('Minimum price criteria'),
+  "price_max": zod.coerce.number().nullish().describe('Maximum price criteria'),
+  "currency": zod.coerce.string().nullish().describe('Currency ISO 4217 du prospect'),
   "criteria": zod.object({
-  "category": zod.number().nullish(),
+  "category": zod.coerce.number().nullish(),
   "area": zod.object({
-  "min": zod.number().nullish(),
-  "max": zod.number().nullish()
-}).optional(),
+  "min": zod.coerce.number().nullish(),
+  "max": zod.coerce.number().nullish()
+}).nullish(),
   "room": zod.object({
-  "min": zod.number().nullish(),
-  "max": zod.number().nullish()
-}).optional(),
+  "min": zod.coerce.number().nullish(),
+  "max": zod.coerce.number().nullish()
+}).nullish(),
   "price": zod.object({
-  "min": zod.number().nullish(),
-  "max": zod.number().nullish(),
-  "currency": zod.string().nullish()
-}).optional(),
+  "min": zod.coerce.number().nullish(),
+  "max": zod.coerce.number().nullish(),
+  "currency": zod.coerce.string().nullish()
+}).nullish(),
   "cities": zod.array(zod.looseObject({
 
-})).optional(),
+})).nullish(),
   "locations": zod.array(zod.looseObject({
 
-})).optional(),
-  "types": zod.array(zod.number()).optional(),
-  "subtype": zod.number().nullish()
+})).nullish(),
+  "types": zod.array(zod.coerce.number()).nullish(),
+  "subtype": zod.coerce.number().nullish()
 }).nullish().describe('Prospect search criteria'),
-  "created_at": zod.iso.datetime({"offset":true}).optional().describe('Creation date'),
-  "updated_at": zod.iso.datetime({"offset":true}).optional().describe('Last update date')
+  "created_at": zod.coerce.string().nullish().describe('Creation date'),
+  "updated_at": zod.coerce.string().nullish().describe('Last update date')
 }).describe('Incoming lead (prospect from a portal or form)')
 
 export const UpdateLeadResponse = zod.object({
-  "id": zod.number().optional().describe('ID of the updated lead'),
-  "created_at": zod.iso.datetime({"offset":true}).optional().describe('Creation date'),
-  "updated_at": zod.iso.datetime({"offset":true}).optional().describe('Last update date')
+  "id": zod.coerce.number().nullish().describe('ID of the updated lead'),
+  "created_at": zod.coerce.string().nullish().describe('Creation date'),
+  "updated_at": zod.coerce.string().nullish().describe('Last update date')
 })
 
 
@@ -1489,7 +1489,7 @@ export const UpdateLeadResponse = zod.object({
  * @summary Retrieve the requests list
  */
 export const ListRequestsParams = zod.object({
-  "agency_id": zod.number().describe('Unique ID of the agency')
+  "agency_id": zod.coerce.number().describe('Unique ID of the agency')
 })
 
 export const listRequestsQueryLimitDefault = 10000;
@@ -1498,97 +1498,97 @@ export const listRequestsQueryLimitMax = 10000;
 export const listRequestsQueryOffsetDefault = 0;
 
 export const ListRequestsQueryParams = zod.object({
-  "limit": zod.number().max(listRequestsQueryLimitMax).default(listRequestsQueryLimitDefault).describe('Number of records to return (max: 10000)'),
-  "offset": zod.number().default(listRequestsQueryOffsetDefault).describe('Number of records to skip'),
-  "timestamp": zod.number().optional().describe('Returns requests created or updated since this UNIX timestamp')
+  "limit": zod.coerce.number().max(listRequestsQueryLimitMax).default(listRequestsQueryLimitDefault).describe('Number of records to return (max: 10000)'),
+  "offset": zod.coerce.number().default(listRequestsQueryOffsetDefault).describe('Number of records to skip'),
+  "timestamp": zod.coerce.number().nullish().describe('Returns requests created or updated since this UNIX timestamp')
 })
 
 export const ListRequestsResponse = zod.object({
-  "total_items": zod.number().optional().describe('Total number of items (regardless of pagination)'),
-  "timestamp": zod.number().optional().describe('UNIX timestamp of the most recent item in the list')
+  "total_items": zod.coerce.number().nullish().describe('Total number of items (regardless of pagination)'),
+  "timestamp": zod.coerce.number().nullish().describe('UNIX timestamp of the most recent item in the list')
 }).and(zod.object({
   "requests": zod.array(zod.object({
-  "id": zod.number().optional().describe('Unique ID of the request'),
-  "active": zod.boolean().optional().describe('Whether the request is active'),
-  "contact": zod.string().describe('Associated contact ID (returned as string by the API). \*\*Required on creation (POST)\*\*'),
-  "user": zod.string().describe('Responsible negotiator ID (returned as string by the API). \*\*Required on creation (POST)\*\*'),
-  "ranking": zod.number().nullish().describe('Request rating'),
-  "last_action": zod.iso.datetime({"offset":true}).nullish().describe('Date of the last action'),
-  "auto": zod.boolean().optional().describe('Whether matching is automatic'),
-  "validated": zod.boolean().optional().describe('Whether the system validated the automatic matching'),
+  "id": zod.coerce.number().nullish().describe('Unique ID of the request'),
+  "active": zod.coerce.boolean().nullish().describe('Whether the request is active'),
+  "contact": zod.coerce.string().describe('Associated contact ID (returned as string by the API). \*\*Required on creation (POST)\*\*'),
+  "user": zod.coerce.string().describe('Responsible negotiator ID (returned as string by the API). \*\*Required on creation (POST)\*\*'),
+  "ranking": zod.coerce.number().nullish().describe('Request rating'),
+  "last_action": zod.coerce.string().nullish().describe('Date of the last action'),
+  "auto": zod.coerce.boolean().nullish().describe('Whether matching is automatic'),
+  "validated": zod.coerce.boolean().nullish().describe('Whether the system validated the automatic matching'),
   "emailing": zod.object({
-  "subscription": zod.string().optional().describe('Emailing subscription → see catalog subscription'),
-  "last_at": zod.iso.datetime({"offset":true}).nullish().describe('Date of the last emailing')
-}).optional().describe('Request emailing settings'),
-  "category": zod.string().describe('Searched property category → see catalog property_category (e.g. \'1\'=Sale, \'2\'=Rental). \*\*Required on creation (POST)\*\*'),
-  "subcategory": zod.string().nullish().describe('Subcategory → see catalog property_subcategory'),
-  "types": zod.array(zod.string()).optional().describe('Searched property types → see catalog property_type'),
-  "subtype": zod.string().nullish().describe('Subtype → see catalog property_subtype'),
-  "referral": zod.string().nullish().describe('Search origin → see catalog origine'),
-  "subreferral": zod.string().nullish().describe('Search sub-origin'),
-  "country": zod.string().describe('ISO 3166-1 alpha-2 country code. \*\*Required on creation (POST)\*\*'),
+  "subscription": zod.coerce.string().nullish().describe('Emailing subscription → see catalog subscription'),
+  "last_at": zod.coerce.string().nullish().describe('Date of the last emailing')
+}).nullish().describe('Request emailing settings'),
+  "category": zod.coerce.string().describe('Searched property category → see catalog property_category (e.g. \'1\'=Sale, \'2\'=Rental). \*\*Required on creation (POST)\*\*'),
+  "subcategory": zod.coerce.string().nullish().describe('Subcategory → see catalog property_subcategory'),
+  "types": zod.array(zod.coerce.string()).nullish().describe('Searched property types → see catalog property_type'),
+  "subtype": zod.coerce.string().nullish().describe('Subtype → see catalog property_subtype'),
+  "referral": zod.coerce.string().nullish().describe('Search origin → see catalog origine'),
+  "subreferral": zod.coerce.string().nullish().describe('Search sub-origin'),
+  "country": zod.coerce.string().describe('ISO 3166-1 alpha-2 country code. \*\*Required on creation (POST)\*\*'),
   "locations": zod.array(zod.object({
   "region": zod.looseObject({
 
 }).nullish().describe('Region'),
   "city": zod.object({
-  "id": zod.string().optional(),
-  "name": zod.string().optional()
+  "id": zod.coerce.string().nullish(),
+  "name": zod.coerce.string().nullish()
 }).nullish().describe('City'),
   "district": zod.looseObject({
 
 }).nullish().describe('District')
-})).optional().describe('Geographic search areas'),
+})).nullish().describe('Geographic search areas'),
   "coordinates": zod.looseObject({
 
 }).nullish().describe('GPS coordinates of the search area'),
-  "sector": zod.string().nullish().describe('Agency customized sector'),
-  "zone": zod.string().nullish().describe('Search area'),
-  "rooms_operator": zod.enum(['1', '2', '3']).optional().describe('Rooms operator: \'1\'=equal, \'2\'=greater or equal, \'3\'=less or equal'),
-  "rooms": zod.number().nullish().describe('Minimum number of rooms'),
-  "bedrooms": zod.number().nullish().describe('Number of bedrooms minimum'),
-  "standing": zod.number().nullish().describe('Standing → see catalog property_standing'),
+  "sector": zod.coerce.string().nullish().describe('Agency customized sector'),
+  "zone": zod.coerce.string().nullish().describe('Search area'),
+  "rooms_operator": zod.enum(['1', '2', '3']).nullish().describe('Rooms operator: \'1\'=equal, \'2\'=greater or equal, \'3\'=less or equal'),
+  "rooms": zod.coerce.number().nullish().describe('Minimum number of rooms'),
+  "bedrooms": zod.coerce.number().nullish().describe('Number of bedrooms minimum'),
+  "standing": zod.coerce.number().nullish().describe('Standing → see catalog property_standing'),
   "view": zod.object({
-  "type": zod.number().nullish().describe('View type → see catalog property_view_type'),
-  "landscape": zod.number().nullish().describe('Landscape type → see catalog property_view_landscape')
+  "type": zod.coerce.number().nullish().describe('View type → see catalog property_view_type'),
+  "landscape": zod.coerce.number().nullish().describe('Landscape type → see catalog property_view_landscape')
 }).nullish().describe('Searched view'),
-  "condition": zod.number().nullish().describe('Property condition → see catalog property_condition'),
-  "availability": zod.number().nullish().describe('Availability → see catalog property_availability'),
-  "margin": zod.string().optional().describe('Matching margin in %'),
+  "condition": zod.coerce.number().nullish().describe('Property condition → see catalog property_condition'),
+  "availability": zod.coerce.number().nullish().describe('Availability → see catalog property_availability'),
+  "margin": zod.coerce.string().nullish().describe('Matching margin in %'),
   "area": zod.object({
-  "min": zod.string().nullish().describe('Minimum area'),
-  "max": zod.string().nullish().describe('Maximum area'),
-  "unit": zod.string().optional().describe('Area unit → see catalog unit_area')
-}).optional().describe('Searched area range'),
+  "min": zod.coerce.string().nullish().describe('Minimum area'),
+  "max": zod.coerce.string().nullish().describe('Maximum area'),
+  "unit": zod.coerce.string().nullish().describe('Area unit → see catalog unit_area')
+}).nullish().describe('Searched area range'),
   "price": zod.object({
-  "min": zod.string().nullish().describe('Minimum price'),
-  "max": zod.string().nullish().describe('Maximum price'),
-  "currency": zod.string().optional().describe('Currency ISO 4217')
-}).optional().describe('Searched price range'),
+  "min": zod.coerce.string().nullish().describe('Minimum price'),
+  "max": zod.coerce.string().nullish().describe('Maximum price'),
+  "currency": zod.coerce.string().nullish().describe('Currency ISO 4217')
+}).nullish().describe('Searched price range'),
   "floor": zod.object({
-  "operator": zod.enum(['1', '2', '3']).optional().describe('Operator: \'1\'=equal, \'2\'=greater or equal, \'3\'=less or equal'),
-  "type": zod.number().nullish().describe('Floor type → see catalog property_floor'),
-  "value": zod.number().nullish().describe('Floor number (0=ground, 1=first...)')
-}).optional().describe('Searched floor'),
+  "operator": zod.enum(['1', '2', '3']).nullish().describe('Operator: \'1\'=equal, \'2\'=greater or equal, \'3\'=less or equal'),
+  "type": zod.coerce.number().nullish().describe('Floor type → see catalog property_floor'),
+  "value": zod.coerce.number().nullish().describe('Floor number (0=ground, 1=first...)')
+}).nullish().describe('Searched floor'),
   "areas": zod.array(zod.object({
-  "type": zod.number().optional().describe('Room type → see catalog property_areas'),
-  "number": zod.number().optional().describe('Number of rooms'),
-  "area_min": zod.number().nullish().describe('Minimum room area')
-})).optional().describe('Searched room and area details'),
-  "proximities": zod.array(zod.number()).optional().describe('Desired proximities → see catalog property_proximity'),
-  "services": zod.array(zod.number()).optional().describe('Desired services → see catalog property_service'),
-  "activities": zod.array(zod.number()).optional().describe('Desired activities → see catalog property_activity'),
-  "tags": zod.array(zod.number()).optional().describe('Tags → see catalog tags'),
+  "type": zod.coerce.number().nullish().describe('Room type → see catalog property_areas'),
+  "number": zod.coerce.number().nullish().describe('Number of rooms'),
+  "area_min": zod.coerce.number().nullish().describe('Minimum room area')
+})).nullish().describe('Searched room and area details'),
+  "proximities": zod.array(zod.coerce.number()).nullish().describe('Desired proximities → see catalog property_proximity'),
+  "services": zod.array(zod.coerce.number()).nullish().describe('Desired services → see catalog property_service'),
+  "activities": zod.array(zod.coerce.number()).nullish().describe('Desired activities → see catalog property_activity'),
+  "tags": zod.array(zod.coerce.number()).nullish().describe('Tags → see catalog tags'),
   "tags_customized": zod.array(zod.object({
-  "comment": zod.string().optional()
-})).optional().describe('Agency customized tags'),
-  "comment": zod.string().optional().describe('Free comment'),
-  "free_criteria": zod.string().optional().describe('Additional free criteria'),
-  "created_at": zod.iso.datetime({"offset":true}).optional().describe('Creation date. Format returned by the API: \'YYYY-MM-DD HH:MM:SS\''),
-  "created_by": zod.string().optional().describe('Creator user ID'),
-  "updated_at": zod.iso.datetime({"offset":true}).optional().describe('Last update date. Format returned by the API: \'YYYY-MM-DD HH:MM:SS\''),
-  "updated_by": zod.string().optional().describe('Last modifier user ID')
-}).describe('Contact search request')).optional()
+  "comment": zod.coerce.string().nullish()
+})).nullish().describe('Agency customized tags'),
+  "comment": zod.coerce.string().nullish().describe('Free comment'),
+  "free_criteria": zod.coerce.string().nullish().describe('Additional free criteria'),
+  "created_at": zod.coerce.string().nullish().describe('Creation date. Format returned by the API: \'YYYY-MM-DD HH:MM:SS\''),
+  "created_by": zod.coerce.string().nullish().describe('Creator user ID'),
+  "updated_at": zod.coerce.string().nullish().describe('Last update date. Format returned by the API: \'YYYY-MM-DD HH:MM:SS\''),
+  "updated_by": zod.coerce.string().nullish().describe('Last modifier user ID')
+}).describe('Contact search request')).nullish()
 }))
 
 
@@ -1596,94 +1596,94 @@ export const ListRequestsResponse = zod.object({
  * @summary Create a new request
  */
 export const CreateRequestParams = zod.object({
-  "agency_id": zod.number()
+  "agency_id": zod.coerce.number()
 })
 
 export const CreateRequestBody = zod.object({
-  "id": zod.number().optional().describe('Unique ID of the request'),
-  "active": zod.boolean().optional().describe('Whether the request is active'),
-  "contact": zod.string().describe('Associated contact ID (returned as string by the API). \*\*Required on creation (POST)\*\*'),
-  "user": zod.string().describe('Responsible negotiator ID (returned as string by the API). \*\*Required on creation (POST)\*\*'),
-  "ranking": zod.number().nullish().describe('Request rating'),
-  "last_action": zod.iso.datetime({"offset":true}).nullish().describe('Date of the last action'),
-  "auto": zod.boolean().optional().describe('Whether matching is automatic'),
-  "validated": zod.boolean().optional().describe('Whether the system validated the automatic matching'),
+  "id": zod.coerce.number().nullish().describe('Unique ID of the request'),
+  "active": zod.coerce.boolean().nullish().describe('Whether the request is active'),
+  "contact": zod.coerce.string().describe('Associated contact ID (returned as string by the API). \*\*Required on creation (POST)\*\*'),
+  "user": zod.coerce.string().describe('Responsible negotiator ID (returned as string by the API). \*\*Required on creation (POST)\*\*'),
+  "ranking": zod.coerce.number().nullish().describe('Request rating'),
+  "last_action": zod.coerce.string().nullish().describe('Date of the last action'),
+  "auto": zod.coerce.boolean().nullish().describe('Whether matching is automatic'),
+  "validated": zod.coerce.boolean().nullish().describe('Whether the system validated the automatic matching'),
   "emailing": zod.object({
-  "subscription": zod.string().optional().describe('Emailing subscription → see catalog subscription'),
-  "last_at": zod.iso.datetime({"offset":true}).nullish().describe('Date of the last emailing')
-}).optional().describe('Request emailing settings'),
-  "category": zod.string().describe('Searched property category → see catalog property_category (e.g. \'1\'=Sale, \'2\'=Rental). \*\*Required on creation (POST)\*\*'),
-  "subcategory": zod.string().nullish().describe('Subcategory → see catalog property_subcategory'),
-  "types": zod.array(zod.string()).optional().describe('Searched property types → see catalog property_type'),
-  "subtype": zod.string().nullish().describe('Subtype → see catalog property_subtype'),
-  "referral": zod.string().nullish().describe('Search origin → see catalog origine'),
-  "subreferral": zod.string().nullish().describe('Search sub-origin'),
-  "country": zod.string().describe('ISO 3166-1 alpha-2 country code. \*\*Required on creation (POST)\*\*'),
+  "subscription": zod.coerce.string().nullish().describe('Emailing subscription → see catalog subscription'),
+  "last_at": zod.coerce.string().nullish().describe('Date of the last emailing')
+}).nullish().describe('Request emailing settings'),
+  "category": zod.coerce.string().describe('Searched property category → see catalog property_category (e.g. \'1\'=Sale, \'2\'=Rental). \*\*Required on creation (POST)\*\*'),
+  "subcategory": zod.coerce.string().nullish().describe('Subcategory → see catalog property_subcategory'),
+  "types": zod.array(zod.coerce.string()).nullish().describe('Searched property types → see catalog property_type'),
+  "subtype": zod.coerce.string().nullish().describe('Subtype → see catalog property_subtype'),
+  "referral": zod.coerce.string().nullish().describe('Search origin → see catalog origine'),
+  "subreferral": zod.coerce.string().nullish().describe('Search sub-origin'),
+  "country": zod.coerce.string().describe('ISO 3166-1 alpha-2 country code. \*\*Required on creation (POST)\*\*'),
   "locations": zod.array(zod.object({
   "region": zod.looseObject({
 
 }).nullish().describe('Region'),
   "city": zod.object({
-  "id": zod.string().optional(),
-  "name": zod.string().optional()
+  "id": zod.coerce.string().nullish(),
+  "name": zod.coerce.string().nullish()
 }).nullish().describe('City'),
   "district": zod.looseObject({
 
 }).nullish().describe('District')
-})).optional().describe('Geographic search areas'),
+})).nullish().describe('Geographic search areas'),
   "coordinates": zod.looseObject({
 
 }).nullish().describe('GPS coordinates of the search area'),
-  "sector": zod.string().nullish().describe('Agency customized sector'),
-  "zone": zod.string().nullish().describe('Search area'),
-  "rooms_operator": zod.enum(['1', '2', '3']).optional().describe('Rooms operator: \'1\'=equal, \'2\'=greater or equal, \'3\'=less or equal'),
-  "rooms": zod.number().nullish().describe('Minimum number of rooms'),
-  "bedrooms": zod.number().nullish().describe('Number of bedrooms minimum'),
-  "standing": zod.number().nullish().describe('Standing → see catalog property_standing'),
+  "sector": zod.coerce.string().nullish().describe('Agency customized sector'),
+  "zone": zod.coerce.string().nullish().describe('Search area'),
+  "rooms_operator": zod.enum(['1', '2', '3']).nullish().describe('Rooms operator: \'1\'=equal, \'2\'=greater or equal, \'3\'=less or equal'),
+  "rooms": zod.coerce.number().nullish().describe('Minimum number of rooms'),
+  "bedrooms": zod.coerce.number().nullish().describe('Number of bedrooms minimum'),
+  "standing": zod.coerce.number().nullish().describe('Standing → see catalog property_standing'),
   "view": zod.object({
-  "type": zod.number().nullish().describe('View type → see catalog property_view_type'),
-  "landscape": zod.number().nullish().describe('Landscape type → see catalog property_view_landscape')
+  "type": zod.coerce.number().nullish().describe('View type → see catalog property_view_type'),
+  "landscape": zod.coerce.number().nullish().describe('Landscape type → see catalog property_view_landscape')
 }).nullish().describe('Searched view'),
-  "condition": zod.number().nullish().describe('Property condition → see catalog property_condition'),
-  "availability": zod.number().nullish().describe('Availability → see catalog property_availability'),
-  "margin": zod.string().optional().describe('Matching margin in %'),
+  "condition": zod.coerce.number().nullish().describe('Property condition → see catalog property_condition'),
+  "availability": zod.coerce.number().nullish().describe('Availability → see catalog property_availability'),
+  "margin": zod.coerce.string().nullish().describe('Matching margin in %'),
   "area": zod.object({
-  "min": zod.string().nullish().describe('Minimum area'),
-  "max": zod.string().nullish().describe('Maximum area'),
-  "unit": zod.string().optional().describe('Area unit → see catalog unit_area')
-}).optional().describe('Searched area range'),
+  "min": zod.coerce.string().nullish().describe('Minimum area'),
+  "max": zod.coerce.string().nullish().describe('Maximum area'),
+  "unit": zod.coerce.string().nullish().describe('Area unit → see catalog unit_area')
+}).nullish().describe('Searched area range'),
   "price": zod.object({
-  "min": zod.string().nullish().describe('Minimum price'),
-  "max": zod.string().nullish().describe('Maximum price'),
-  "currency": zod.string().optional().describe('Currency ISO 4217')
-}).optional().describe('Searched price range'),
+  "min": zod.coerce.string().nullish().describe('Minimum price'),
+  "max": zod.coerce.string().nullish().describe('Maximum price'),
+  "currency": zod.coerce.string().nullish().describe('Currency ISO 4217')
+}).nullish().describe('Searched price range'),
   "floor": zod.object({
-  "operator": zod.enum(['1', '2', '3']).optional().describe('Operator: \'1\'=equal, \'2\'=greater or equal, \'3\'=less or equal'),
-  "type": zod.number().nullish().describe('Floor type → see catalog property_floor'),
-  "value": zod.number().nullish().describe('Floor number (0=ground, 1=first...)')
-}).optional().describe('Searched floor'),
+  "operator": zod.enum(['1', '2', '3']).nullish().describe('Operator: \'1\'=equal, \'2\'=greater or equal, \'3\'=less or equal'),
+  "type": zod.coerce.number().nullish().describe('Floor type → see catalog property_floor'),
+  "value": zod.coerce.number().nullish().describe('Floor number (0=ground, 1=first...)')
+}).nullish().describe('Searched floor'),
   "areas": zod.array(zod.object({
-  "type": zod.number().optional().describe('Room type → see catalog property_areas'),
-  "number": zod.number().optional().describe('Number of rooms'),
-  "area_min": zod.number().nullish().describe('Minimum room area')
-})).optional().describe('Searched room and area details'),
-  "proximities": zod.array(zod.number()).optional().describe('Desired proximities → see catalog property_proximity'),
-  "services": zod.array(zod.number()).optional().describe('Desired services → see catalog property_service'),
-  "activities": zod.array(zod.number()).optional().describe('Desired activities → see catalog property_activity'),
-  "tags": zod.array(zod.number()).optional().describe('Tags → see catalog tags'),
+  "type": zod.coerce.number().nullish().describe('Room type → see catalog property_areas'),
+  "number": zod.coerce.number().nullish().describe('Number of rooms'),
+  "area_min": zod.coerce.number().nullish().describe('Minimum room area')
+})).nullish().describe('Searched room and area details'),
+  "proximities": zod.array(zod.coerce.number()).nullish().describe('Desired proximities → see catalog property_proximity'),
+  "services": zod.array(zod.coerce.number()).nullish().describe('Desired services → see catalog property_service'),
+  "activities": zod.array(zod.coerce.number()).nullish().describe('Desired activities → see catalog property_activity'),
+  "tags": zod.array(zod.coerce.number()).nullish().describe('Tags → see catalog tags'),
   "tags_customized": zod.array(zod.object({
-  "comment": zod.string().optional()
-})).optional().describe('Agency customized tags'),
-  "comment": zod.string().optional().describe('Free comment'),
-  "free_criteria": zod.string().optional().describe('Additional free criteria'),
-  "created_at": zod.iso.datetime({"offset":true}).optional().describe('Creation date. Format returned by the API: \'YYYY-MM-DD HH:MM:SS\''),
-  "created_by": zod.string().optional().describe('Creator user ID'),
-  "updated_at": zod.iso.datetime({"offset":true}).optional().describe('Last update date. Format returned by the API: \'YYYY-MM-DD HH:MM:SS\''),
-  "updated_by": zod.string().optional().describe('Last modifier user ID')
+  "comment": zod.coerce.string().nullish()
+})).nullish().describe('Agency customized tags'),
+  "comment": zod.coerce.string().nullish().describe('Free comment'),
+  "free_criteria": zod.coerce.string().nullish().describe('Additional free criteria'),
+  "created_at": zod.coerce.string().nullish().describe('Creation date. Format returned by the API: \'YYYY-MM-DD HH:MM:SS\''),
+  "created_by": zod.coerce.string().nullish().describe('Creator user ID'),
+  "updated_at": zod.coerce.string().nullish().describe('Last update date. Format returned by the API: \'YYYY-MM-DD HH:MM:SS\''),
+  "updated_by": zod.coerce.string().nullish().describe('Last modifier user ID')
 }).describe('Contact search request')
 
 export const CreateRequestResponse = zod.object({
-  "id": zod.number().optional().describe('ID of the created request')
+  "id": zod.coerce.number().nullish().describe('ID of the created request')
 })
 
 
@@ -1691,97 +1691,97 @@ export const CreateRequestResponse = zod.object({
  * @summary Update a request
  */
 export const UpdateRequestParams = zod.object({
-  "agency_id": zod.number().describe('Unique ID of the agency'),
-  "request_id": zod.number().describe('Unique ID of the request')
+  "agency_id": zod.coerce.number().describe('Unique ID of the agency'),
+  "request_id": zod.coerce.number().describe('Unique ID of the request')
 })
 
 export const UpdateRequestBody = zod.object({
-  "id": zod.number().optional().describe('Unique ID of the request'),
-  "active": zod.boolean().optional().describe('Whether the request is active'),
-  "contact": zod.string().describe('Associated contact ID (returned as string by the API). \*\*Required on creation (POST)\*\*'),
-  "user": zod.string().describe('Responsible negotiator ID (returned as string by the API). \*\*Required on creation (POST)\*\*'),
-  "ranking": zod.number().nullish().describe('Request rating'),
-  "last_action": zod.iso.datetime({"offset":true}).nullish().describe('Date of the last action'),
-  "auto": zod.boolean().optional().describe('Whether matching is automatic'),
-  "validated": zod.boolean().optional().describe('Whether the system validated the automatic matching'),
+  "id": zod.coerce.number().nullish().describe('Unique ID of the request'),
+  "active": zod.coerce.boolean().nullish().describe('Whether the request is active'),
+  "contact": zod.coerce.string().describe('Associated contact ID (returned as string by the API). \*\*Required on creation (POST)\*\*'),
+  "user": zod.coerce.string().describe('Responsible negotiator ID (returned as string by the API). \*\*Required on creation (POST)\*\*'),
+  "ranking": zod.coerce.number().nullish().describe('Request rating'),
+  "last_action": zod.coerce.string().nullish().describe('Date of the last action'),
+  "auto": zod.coerce.boolean().nullish().describe('Whether matching is automatic'),
+  "validated": zod.coerce.boolean().nullish().describe('Whether the system validated the automatic matching'),
   "emailing": zod.object({
-  "subscription": zod.string().optional().describe('Emailing subscription → see catalog subscription'),
-  "last_at": zod.iso.datetime({"offset":true}).nullish().describe('Date of the last emailing')
-}).optional().describe('Request emailing settings'),
-  "category": zod.string().describe('Searched property category → see catalog property_category (e.g. \'1\'=Sale, \'2\'=Rental). \*\*Required on creation (POST)\*\*'),
-  "subcategory": zod.string().nullish().describe('Subcategory → see catalog property_subcategory'),
-  "types": zod.array(zod.string()).optional().describe('Searched property types → see catalog property_type'),
-  "subtype": zod.string().nullish().describe('Subtype → see catalog property_subtype'),
-  "referral": zod.string().nullish().describe('Search origin → see catalog origine'),
-  "subreferral": zod.string().nullish().describe('Search sub-origin'),
-  "country": zod.string().describe('ISO 3166-1 alpha-2 country code. \*\*Required on creation (POST)\*\*'),
+  "subscription": zod.coerce.string().nullish().describe('Emailing subscription → see catalog subscription'),
+  "last_at": zod.coerce.string().nullish().describe('Date of the last emailing')
+}).nullish().describe('Request emailing settings'),
+  "category": zod.coerce.string().describe('Searched property category → see catalog property_category (e.g. \'1\'=Sale, \'2\'=Rental). \*\*Required on creation (POST)\*\*'),
+  "subcategory": zod.coerce.string().nullish().describe('Subcategory → see catalog property_subcategory'),
+  "types": zod.array(zod.coerce.string()).nullish().describe('Searched property types → see catalog property_type'),
+  "subtype": zod.coerce.string().nullish().describe('Subtype → see catalog property_subtype'),
+  "referral": zod.coerce.string().nullish().describe('Search origin → see catalog origine'),
+  "subreferral": zod.coerce.string().nullish().describe('Search sub-origin'),
+  "country": zod.coerce.string().describe('ISO 3166-1 alpha-2 country code. \*\*Required on creation (POST)\*\*'),
   "locations": zod.array(zod.object({
   "region": zod.looseObject({
 
 }).nullish().describe('Region'),
   "city": zod.object({
-  "id": zod.string().optional(),
-  "name": zod.string().optional()
+  "id": zod.coerce.string().nullish(),
+  "name": zod.coerce.string().nullish()
 }).nullish().describe('City'),
   "district": zod.looseObject({
 
 }).nullish().describe('District')
-})).optional().describe('Geographic search areas'),
+})).nullish().describe('Geographic search areas'),
   "coordinates": zod.looseObject({
 
 }).nullish().describe('GPS coordinates of the search area'),
-  "sector": zod.string().nullish().describe('Agency customized sector'),
-  "zone": zod.string().nullish().describe('Search area'),
-  "rooms_operator": zod.enum(['1', '2', '3']).optional().describe('Rooms operator: \'1\'=equal, \'2\'=greater or equal, \'3\'=less or equal'),
-  "rooms": zod.number().nullish().describe('Minimum number of rooms'),
-  "bedrooms": zod.number().nullish().describe('Number of bedrooms minimum'),
-  "standing": zod.number().nullish().describe('Standing → see catalog property_standing'),
+  "sector": zod.coerce.string().nullish().describe('Agency customized sector'),
+  "zone": zod.coerce.string().nullish().describe('Search area'),
+  "rooms_operator": zod.enum(['1', '2', '3']).nullish().describe('Rooms operator: \'1\'=equal, \'2\'=greater or equal, \'3\'=less or equal'),
+  "rooms": zod.coerce.number().nullish().describe('Minimum number of rooms'),
+  "bedrooms": zod.coerce.number().nullish().describe('Number of bedrooms minimum'),
+  "standing": zod.coerce.number().nullish().describe('Standing → see catalog property_standing'),
   "view": zod.object({
-  "type": zod.number().nullish().describe('View type → see catalog property_view_type'),
-  "landscape": zod.number().nullish().describe('Landscape type → see catalog property_view_landscape')
+  "type": zod.coerce.number().nullish().describe('View type → see catalog property_view_type'),
+  "landscape": zod.coerce.number().nullish().describe('Landscape type → see catalog property_view_landscape')
 }).nullish().describe('Searched view'),
-  "condition": zod.number().nullish().describe('Property condition → see catalog property_condition'),
-  "availability": zod.number().nullish().describe('Availability → see catalog property_availability'),
-  "margin": zod.string().optional().describe('Matching margin in %'),
+  "condition": zod.coerce.number().nullish().describe('Property condition → see catalog property_condition'),
+  "availability": zod.coerce.number().nullish().describe('Availability → see catalog property_availability'),
+  "margin": zod.coerce.string().nullish().describe('Matching margin in %'),
   "area": zod.object({
-  "min": zod.string().nullish().describe('Minimum area'),
-  "max": zod.string().nullish().describe('Maximum area'),
-  "unit": zod.string().optional().describe('Area unit → see catalog unit_area')
-}).optional().describe('Searched area range'),
+  "min": zod.coerce.string().nullish().describe('Minimum area'),
+  "max": zod.coerce.string().nullish().describe('Maximum area'),
+  "unit": zod.coerce.string().nullish().describe('Area unit → see catalog unit_area')
+}).nullish().describe('Searched area range'),
   "price": zod.object({
-  "min": zod.string().nullish().describe('Minimum price'),
-  "max": zod.string().nullish().describe('Maximum price'),
-  "currency": zod.string().optional().describe('Currency ISO 4217')
-}).optional().describe('Searched price range'),
+  "min": zod.coerce.string().nullish().describe('Minimum price'),
+  "max": zod.coerce.string().nullish().describe('Maximum price'),
+  "currency": zod.coerce.string().nullish().describe('Currency ISO 4217')
+}).nullish().describe('Searched price range'),
   "floor": zod.object({
-  "operator": zod.enum(['1', '2', '3']).optional().describe('Operator: \'1\'=equal, \'2\'=greater or equal, \'3\'=less or equal'),
-  "type": zod.number().nullish().describe('Floor type → see catalog property_floor'),
-  "value": zod.number().nullish().describe('Floor number (0=ground, 1=first...)')
-}).optional().describe('Searched floor'),
+  "operator": zod.enum(['1', '2', '3']).nullish().describe('Operator: \'1\'=equal, \'2\'=greater or equal, \'3\'=less or equal'),
+  "type": zod.coerce.number().nullish().describe('Floor type → see catalog property_floor'),
+  "value": zod.coerce.number().nullish().describe('Floor number (0=ground, 1=first...)')
+}).nullish().describe('Searched floor'),
   "areas": zod.array(zod.object({
-  "type": zod.number().optional().describe('Room type → see catalog property_areas'),
-  "number": zod.number().optional().describe('Number of rooms'),
-  "area_min": zod.number().nullish().describe('Minimum room area')
-})).optional().describe('Searched room and area details'),
-  "proximities": zod.array(zod.number()).optional().describe('Desired proximities → see catalog property_proximity'),
-  "services": zod.array(zod.number()).optional().describe('Desired services → see catalog property_service'),
-  "activities": zod.array(zod.number()).optional().describe('Desired activities → see catalog property_activity'),
-  "tags": zod.array(zod.number()).optional().describe('Tags → see catalog tags'),
+  "type": zod.coerce.number().nullish().describe('Room type → see catalog property_areas'),
+  "number": zod.coerce.number().nullish().describe('Number of rooms'),
+  "area_min": zod.coerce.number().nullish().describe('Minimum room area')
+})).nullish().describe('Searched room and area details'),
+  "proximities": zod.array(zod.coerce.number()).nullish().describe('Desired proximities → see catalog property_proximity'),
+  "services": zod.array(zod.coerce.number()).nullish().describe('Desired services → see catalog property_service'),
+  "activities": zod.array(zod.coerce.number()).nullish().describe('Desired activities → see catalog property_activity'),
+  "tags": zod.array(zod.coerce.number()).nullish().describe('Tags → see catalog tags'),
   "tags_customized": zod.array(zod.object({
-  "comment": zod.string().optional()
-})).optional().describe('Agency customized tags'),
-  "comment": zod.string().optional().describe('Free comment'),
-  "free_criteria": zod.string().optional().describe('Additional free criteria'),
-  "created_at": zod.iso.datetime({"offset":true}).optional().describe('Creation date. Format returned by the API: \'YYYY-MM-DD HH:MM:SS\''),
-  "created_by": zod.string().optional().describe('Creator user ID'),
-  "updated_at": zod.iso.datetime({"offset":true}).optional().describe('Last update date. Format returned by the API: \'YYYY-MM-DD HH:MM:SS\''),
-  "updated_by": zod.string().optional().describe('Last modifier user ID')
+  "comment": zod.coerce.string().nullish()
+})).nullish().describe('Agency customized tags'),
+  "comment": zod.coerce.string().nullish().describe('Free comment'),
+  "free_criteria": zod.coerce.string().nullish().describe('Additional free criteria'),
+  "created_at": zod.coerce.string().nullish().describe('Creation date. Format returned by the API: \'YYYY-MM-DD HH:MM:SS\''),
+  "created_by": zod.coerce.string().nullish().describe('Creator user ID'),
+  "updated_at": zod.coerce.string().nullish().describe('Last update date. Format returned by the API: \'YYYY-MM-DD HH:MM:SS\''),
+  "updated_by": zod.coerce.string().nullish().describe('Last modifier user ID')
 }).describe('Contact search request')
 
 export const UpdateRequestResponse = zod.object({
-  "id": zod.number().optional().describe('ID of the updated request'),
-  "created_at": zod.iso.datetime({"offset":true}).optional(),
-  "updated_at": zod.iso.datetime({"offset":true}).optional()
+  "id": zod.coerce.number().nullish().describe('ID of the updated request'),
+  "created_at": zod.coerce.string().nullish(),
+  "updated_at": zod.coerce.string().nullish()
 })
 
 
@@ -1790,26 +1790,26 @@ export const UpdateRequestResponse = zod.object({
  * @summary Create a new action
  */
 export const CreateActionParams = zod.object({
-  "agency_id": zod.number().describe('Unique ID of the agency')
+  "agency_id": zod.coerce.number().describe('Unique ID of the agency')
 })
 
 export const CreateActionBody = zod.object({
-  "user": zod.number().describe('ID of the responsible user. \*\*Required on creation (POST)\*\*'),
-  "type": zod.number().nullable().describe('Action type → see catalog action_type. \*\*Required on creation (POST)\*\*'),
-  "method": zod.number().nullish().describe('Action method → see catalog action_method'),
-  "date": zod.iso.date().describe('Action date (format YYYY-MM-DD). \*\*Required on creation (POST)\*\*'),
-  "start_at": zod.string().nullish().describe('Start time (format HH:MM)'),
-  "end_at": zod.string().nullish().describe('End time (format HH:MM)'),
-  "contact": zod.number().nullish().describe('ID of the contact associated with the action'),
-  "properties": zod.array(zod.number()).optional().describe('List of property IDs associated with the action'),
-  "subject": zod.string().nullish().describe('Action subject'),
-  "content": zod.string().nullish().describe('Detailed content of the action'),
-  "referral": zod.number().nullish().describe('Action origin → see catalog origine'),
-  "subreferral": zod.number().nullish().describe('Action sub-origin')
+  "user": zod.coerce.number().describe('ID of the responsible user. \*\*Required on creation (POST)\*\*'),
+  "type": zod.coerce.number().nullable().describe('Action type → see catalog action_type. \*\*Required on creation (POST)\*\*'),
+  "method": zod.coerce.number().nullish().describe('Action method → see catalog action_method'),
+  "date": zod.coerce.string().describe('Action date (format YYYY-MM-DD). \*\*Required on creation (POST)\*\*'),
+  "start_at": zod.coerce.string().nullish().describe('Start time (format HH:MM)'),
+  "end_at": zod.coerce.string().nullish().describe('End time (format HH:MM)'),
+  "contact": zod.coerce.number().nullish().describe('ID of the contact associated with the action'),
+  "properties": zod.array(zod.coerce.number()).nullish().describe('List of property IDs associated with the action'),
+  "subject": zod.coerce.string().nullish().describe('Action subject'),
+  "content": zod.coerce.string().nullish().describe('Detailed content of the action'),
+  "referral": zod.coerce.number().nullish().describe('Action origin → see catalog origine'),
+  "subreferral": zod.coerce.number().nullish().describe('Action sub-origin')
 })
 
 export const CreateActionResponse = zod.object({
-  "id": zod.string().optional().describe('ID of the created action (returned as string by the API)')
+  "id": zod.coerce.string().nullish().describe('ID of the created action (returned as string by the API)')
 })
 
 
@@ -1818,27 +1818,27 @@ export const CreateActionResponse = zod.object({
  * @summary Update an action
  */
 export const UpdateActionParams = zod.object({
-  "agency_id": zod.number().describe('Unique ID of the agency'),
-  "action_id": zod.number().describe('Unique ID of the action to update')
+  "agency_id": zod.coerce.number().describe('Unique ID of the agency'),
+  "action_id": zod.coerce.number().describe('Unique ID of the action to update')
 })
 
 export const UpdateActionBody = zod.object({
-  "user": zod.number().describe('ID of the responsible user. \*\*Required\*\*'),
-  "type": zod.number().nullable().describe('Action type → see catalog action_type. \*\*Required\*\*'),
-  "method": zod.number().nullish().describe('Action method → see catalog action_method'),
-  "date": zod.iso.date().describe('Action date (format YYYY-MM-DD). \*\*Required\*\*'),
-  "start_at": zod.string().nullish().describe('Start time (format HH:MM)'),
-  "end_at": zod.string().nullish().describe('End time (format HH:MM)'),
-  "contact": zod.number().nullish().describe('ID of the contact associated with the action'),
-  "properties": zod.array(zod.number()).optional().describe('List of property IDs associated with the action'),
-  "subject": zod.string().nullish().describe('Action subject'),
-  "content": zod.string().nullish().describe('Detailed content of the action'),
-  "referral": zod.number().nullish().describe('Action origin → see catalog origine'),
-  "subreferral": zod.number().nullish().describe('Action sub-origin')
+  "user": zod.coerce.number().describe('ID of the responsible user. \*\*Required\*\*'),
+  "type": zod.coerce.number().nullable().describe('Action type → see catalog action_type. \*\*Required\*\*'),
+  "method": zod.coerce.number().nullish().describe('Action method → see catalog action_method'),
+  "date": zod.coerce.string().describe('Action date (format YYYY-MM-DD). \*\*Required\*\*'),
+  "start_at": zod.coerce.string().nullish().describe('Start time (format HH:MM)'),
+  "end_at": zod.coerce.string().nullish().describe('End time (format HH:MM)'),
+  "contact": zod.coerce.number().nullish().describe('ID of the contact associated with the action'),
+  "properties": zod.array(zod.coerce.number()).nullish().describe('List of property IDs associated with the action'),
+  "subject": zod.coerce.string().nullish().describe('Action subject'),
+  "content": zod.coerce.string().nullish().describe('Detailed content of the action'),
+  "referral": zod.coerce.number().nullish().describe('Action origin → see catalog origine'),
+  "subreferral": zod.coerce.number().nullish().describe('Action sub-origin')
 })
 
 export const UpdateActionResponse = zod.object({
-  "id": zod.string().optional().describe('ID of the updated action (returned as string by the API)')
+  "id": zod.coerce.string().nullish().describe('ID of the updated action (returned as string by the API)')
 })
 
 
@@ -1855,7 +1855,7 @@ export const UpdateActionResponse = zod.object({
  * @summary Retrieve the contracts list
  */
 export const ListContractsParams = zod.object({
-  "agency_id": zod.number().describe('Unique ID of the agency')
+  "agency_id": zod.coerce.number().describe('Unique ID of the agency')
 })
 
 export const listContractsQueryLimitDefault = 10000;
@@ -1864,48 +1864,48 @@ export const listContractsQueryLimitMax = 10000;
 export const listContractsQueryOffsetDefault = 0;
 
 export const ListContractsQueryParams = zod.object({
-  "limit": zod.number().max(listContractsQueryLimitMax).default(listContractsQueryLimitDefault).describe('Number of records to return (max: 10000)'),
-  "offset": zod.number().default(listContractsQueryOffsetDefault).describe('Number of records to skip'),
-  "timestamp": zod.number().optional().describe('Returns contracts created or updated since this UNIX timestamp')
+  "limit": zod.coerce.number().max(listContractsQueryLimitMax).default(listContractsQueryLimitDefault).describe('Number of records to return (max: 10000)'),
+  "offset": zod.coerce.number().default(listContractsQueryOffsetDefault).describe('Number of records to skip'),
+  "timestamp": zod.coerce.number().nullish().describe('Returns contracts created or updated since this UNIX timestamp')
 })
 
 export const ListContractsResponse = zod.object({
-  "total_items": zod.number().optional().describe('Total number of items (regardless of pagination)'),
-  "timestamp": zod.number().optional().describe('UNIX timestamp of the most recent item in the list')
+  "total_items": zod.coerce.number().nullish().describe('Total number of items (regardless of pagination)'),
+  "timestamp": zod.coerce.number().nullish().describe('UNIX timestamp of the most recent item in the list')
 }).and(zod.object({
   "contracts": zod.array(zod.object({
-  "id": zod.number().optional().describe('Unique ID of the contract'),
-  "step": zod.number().optional().describe('Contract step → see catalog contract_step'),
-  "agency": zod.number().optional().describe('Agency ID'),
-  "property": zod.number().optional().describe('Property ID'),
-  "currency": zod.string().optional().describe('Default currency ISO 4217'),
-  "price": zod.number().optional().describe('Final contract price'),
-  "price_net": zod.number().nullish().describe('Net seller price (cash back to owner)'),
-  "commission": zod.number().nullish().describe('Total transaction commission'),
-  "commission_agency": zod.number().nullish().describe('Agency commission'),
-  "commission_owner": zod.number().nullish().describe('Commission for the owner'),
-  "commission_customer": zod.number().nullish().describe('Buyer commission'),
-  "vat": zod.number().nullish().describe('VAT amount'),
-  "vat_rate": zod.number().nullish().describe('VAT rate in %'),
-  "deposit": zod.number().nullish().describe('Security deposit amount'),
-  "project_at": zod.iso.date().nullish().describe('Project date'),
-  "offer_at": zod.iso.date().nullish().describe('Offer date'),
-  "commitment_at": zod.iso.date().nullish().describe('Commitment \/ promise date'),
-  "condition_precedent_at": zod.iso.date().nullish().describe('Conditions precedent expiry date'),
-  "contract_scheduled_at": zod.iso.date().nullish().describe('Scheduled deed signing date'),
-  "contract_at": zod.iso.date().nullish().describe('Notarial deed signing date'),
-  "collected_at": zod.iso.date().nullish().describe('Funds collection date'),
-  "legal_notice_at": zod.iso.date().nullish().describe('Legal notice date'),
+  "id": zod.coerce.number().nullish().describe('Unique ID of the contract'),
+  "step": zod.coerce.number().nullish().describe('Contract step → see catalog contract_step'),
+  "agency": zod.coerce.number().nullish().describe('Agency ID'),
+  "property": zod.coerce.number().nullish().describe('Property ID'),
+  "currency": zod.coerce.string().nullish().describe('Default currency ISO 4217'),
+  "price": zod.coerce.number().nullish().describe('Final contract price'),
+  "price_net": zod.coerce.number().nullish().describe('Net seller price (cash back to owner)'),
+  "commission": zod.coerce.number().nullish().describe('Total transaction commission'),
+  "commission_agency": zod.coerce.number().nullish().describe('Agency commission'),
+  "commission_owner": zod.coerce.number().nullish().describe('Commission for the owner'),
+  "commission_customer": zod.coerce.number().nullish().describe('Buyer commission'),
+  "vat": zod.coerce.number().nullish().describe('VAT amount'),
+  "vat_rate": zod.coerce.number().nullish().describe('VAT rate in %'),
+  "deposit": zod.coerce.number().nullish().describe('Security deposit amount'),
+  "project_at": zod.coerce.string().nullish().describe('Project date'),
+  "offer_at": zod.coerce.string().nullish().describe('Offer date'),
+  "commitment_at": zod.coerce.string().nullish().describe('Commitment \/ promise date'),
+  "condition_precedent_at": zod.coerce.string().nullish().describe('Conditions precedent expiry date'),
+  "contract_scheduled_at": zod.coerce.string().nullish().describe('Scheduled deed signing date'),
+  "contract_at": zod.coerce.string().nullish().describe('Notarial deed signing date'),
+  "collected_at": zod.coerce.string().nullish().describe('Funds collection date'),
+  "legal_notice_at": zod.coerce.string().nullish().describe('Legal notice date'),
   "contacts": zod.array(zod.looseObject({
 
-})).optional().describe('List of contacts linked to the contract'),
+})).nullish().describe('List of contacts linked to the contract'),
   "entries": zod.array(zod.looseObject({
 
-})).optional().describe('List of contract entries'),
-  "comment": zod.string().nullish().describe('Free comment'),
-  "created_at": zod.iso.datetime({"offset":true}).optional().describe('Creation date'),
-  "updated_at": zod.iso.datetime({"offset":true}).optional().describe('Last update date')
-}).describe('Real estate contract')).optional()
+})).nullish().describe('List of contract entries'),
+  "comment": zod.coerce.string().nullish().describe('Free comment'),
+  "created_at": zod.coerce.string().nullish().describe('Creation date'),
+  "updated_at": zod.coerce.string().nullish().describe('Last update date')
+}).describe('Real estate contract')).nullish()
 }))
 
 
@@ -1925,7 +1925,7 @@ export const ListContractsResponse = zod.object({
  * @summary Retrieve the residences list
  */
 export const ListResidencesParams = zod.object({
-  "agency_id": zod.number().describe('Unique ID of the agency')
+  "agency_id": zod.coerce.number().describe('Unique ID of the agency')
 })
 
 export const listResidencesQueryLimitDefault = 10000;
@@ -1934,63 +1934,63 @@ export const listResidencesQueryLimitMax = 10000;
 export const listResidencesQueryOffsetDefault = 0;
 
 export const ListResidencesQueryParams = zod.object({
-  "limit": zod.number().max(listResidencesQueryLimitMax).default(listResidencesQueryLimitDefault).describe('Number of records to return (max: 10000)'),
-  "offset": zod.number().default(listResidencesQueryOffsetDefault).describe('Number of records to skip'),
-  "timestamp": zod.number().optional().describe('Returns residences created or updated since this UNIX timestamp')
+  "limit": zod.coerce.number().max(listResidencesQueryLimitMax).default(listResidencesQueryLimitDefault).describe('Number of records to return (max: 10000)'),
+  "offset": zod.coerce.number().default(listResidencesQueryOffsetDefault).describe('Number of records to skip'),
+  "timestamp": zod.coerce.number().nullish().describe('Returns residences created or updated since this UNIX timestamp')
 })
 
 export const ListResidencesResponse = zod.object({
-  "total_items": zod.number().optional().describe('Total number of items (regardless of pagination)'),
-  "timestamp": zod.number().optional().describe('UNIX timestamp of the most recent item in the list')
+  "total_items": zod.coerce.number().nullish().describe('Total number of items (regardless of pagination)'),
+  "timestamp": zod.coerce.number().nullish().describe('UNIX timestamp of the most recent item in the list')
 }).and(zod.object({
   "residences": zod.array(zod.object({
-  "id": zod.string().optional().describe('Unique ID of the residence (returned as string)'),
-  "user": zod.string().optional().describe('Responsible user ID (returned as string)'),
-  "type": zod.string().optional().describe('Residence type → see catalog property_building'),
-  "name": zod.string().optional().describe('Residence name'),
-  "reference": zod.string().nullish().describe('Residence reference'),
-  "location_reference": zod.string().nullish().describe('Location reference'),
-  "address": zod.string().optional().describe('Residence address'),
-  "address_more": zod.string().nullish().describe('Additional address details'),
+  "id": zod.coerce.string().nullish().describe('Unique ID of the residence (returned as string)'),
+  "user": zod.coerce.string().nullish().describe('Responsible user ID (returned as string)'),
+  "type": zod.coerce.string().nullish().describe('Residence type → see catalog property_building'),
+  "name": zod.coerce.string().nullish().describe('Residence name'),
+  "reference": zod.coerce.string().nullish().describe('Residence reference'),
+  "location_reference": zod.coerce.string().nullish().describe('Location reference'),
+  "address": zod.coerce.string().nullish().describe('Residence address'),
+  "address_more": zod.coerce.string().nullish().describe('Additional address details'),
   "city": zod.object({
-  "id": zod.string().optional().describe('City ID (returned as string)'),
-  "name": zod.string().optional(),
-  "zipcode": zod.string().optional()
-}).optional(),
-  "district": zod.object({
-  "id": zod.string().optional(),
-  "name": zod.string().optional()
+  "id": zod.coerce.string().nullish().describe('City ID (returned as string)'),
+  "name": zod.coerce.string().nullish(),
+  "zipcode": zod.coerce.string().nullish()
 }).nullish(),
-  "country": zod.string().optional().describe('ISO 3166-1 alpha-2 country code'),
-  "longitude": zod.string().optional().describe('GPS longitude (returned as string)'),
-  "latitude": zod.string().optional().describe('GPS latitude (returned as string)'),
-  "construction_year": zod.string().nullish().describe('Construction year'),
-  "standing": zod.string().nullish().describe('Standing → see catalog property_standing'),
-  "floors": zod.string().nullish().describe('Number of floors in the building (returned as string)'),
-  "lots": zod.string().nullish().describe('Number of lots (returned as string)'),
-  "total_shares": zod.string().nullish().describe('Total shares'),
-  "code": zod.string().nullish().describe('Residence entry code'),
-  "code_at": zod.iso.datetime({"offset":true}).nullish().describe('Date of the last entry code'),
-  "comment": zod.string().nullish().describe('Free comment'),
+  "district": zod.object({
+  "id": zod.coerce.string().nullish(),
+  "name": zod.coerce.string().nullish()
+}).nullish(),
+  "country": zod.coerce.string().nullish().describe('ISO 3166-1 alpha-2 country code'),
+  "longitude": zod.coerce.string().nullish().describe('GPS longitude (returned as string)'),
+  "latitude": zod.coerce.string().nullish().describe('GPS latitude (returned as string)'),
+  "construction_year": zod.coerce.string().nullish().describe('Construction year'),
+  "standing": zod.coerce.string().nullish().describe('Standing → see catalog property_standing'),
+  "floors": zod.coerce.string().nullish().describe('Number of floors in the building (returned as string)'),
+  "lots": zod.coerce.string().nullish().describe('Number of lots (returned as string)'),
+  "total_shares": zod.coerce.string().nullish().describe('Total shares'),
+  "code": zod.coerce.string().nullish().describe('Residence entry code'),
+  "code_at": zod.coerce.string().nullish().describe('Date of the last entry code'),
+  "comment": zod.coerce.string().nullish().describe('Free comment'),
   "contacts": zod.array(zod.object({
-  "contact": zod.string().optional().describe('Contact ID'),
-  "type": zod.string().optional().describe('Type of link with the residence'),
-  "shares": zod.string().nullish().describe('Contact shares'),
+  "contact": zod.coerce.string().nullish().describe('Contact ID'),
+  "type": zod.coerce.string().nullish().describe('Type of link with the residence'),
+  "shares": zod.coerce.string().nullish().describe('Contact shares'),
   "property": zod.object({
-  "rooms": zod.string().optional(),
-  "bedrooms": zod.string().optional(),
-  "subtype": zod.string().optional(),
-  "area": zod.string().optional(),
+  "rooms": zod.coerce.string().nullish(),
+  "bedrooms": zod.coerce.string().nullish(),
+  "subtype": zod.coerce.string().nullish(),
+  "area": zod.coerce.string().nullish(),
   "floor": zod.object({
-  "type": zod.number().optional(),
-  "value": zod.number().nullish()
-}).optional()
+  "type": zod.coerce.number().nullish(),
+  "value": zod.coerce.number().nullish()
+}).nullish()
 }).nullish().describe('Property associated with the contact in the residence'),
-  "comment": zod.string().nullish().describe('Comment about the contact')
-})).optional().describe('Contacts linked to the residence (co-owners, caretakers...)'),
-  "created_at": zod.iso.datetime({"offset":true}).optional().describe('Creation date. Format returned by API: \'YYYY-MM-DD HH:MM:SS\''),
-  "updated_at": zod.iso.datetime({"offset":true}).optional().describe('Last update date. Format returned by API: \'YYYY-MM-DD HH:MM:SS\'')
-}).describe('Residence or building')).optional()
+  "comment": zod.coerce.string().nullish().describe('Comment about the contact')
+})).nullish().describe('Contacts linked to the residence (co-owners, caretakers...)'),
+  "created_at": zod.coerce.string().nullish().describe('Creation date. Format returned by API: \'YYYY-MM-DD HH:MM:SS\''),
+  "updated_at": zod.coerce.string().nullish().describe('Last update date. Format returned by API: \'YYYY-MM-DD HH:MM:SS\'')
+}).describe('Residence or building')).nullish()
 }))
 
 
@@ -1998,31 +1998,31 @@ export const ListResidencesResponse = zod.object({
  * @summary Retrieve the users list
  */
 export const ListUsersParams = zod.object({
-  "agency_id": zod.number()
+  "agency_id": zod.coerce.number()
 })
 
 export const ListUsersResponse = zod.object({
-  "total_items": zod.number().optional().describe('Total number of items (regardless of pagination)'),
-  "timestamp": zod.number().optional().describe('UNIX timestamp of the most recent item in the list')
+  "total_items": zod.coerce.number().nullish().describe('Total number of items (regardless of pagination)'),
+  "timestamp": zod.coerce.number().nullish().describe('UNIX timestamp of the most recent item in the list')
 }).and(zod.object({
   "users": zod.array(zod.object({
-  "id": zod.number().optional(),
-  "agency": zod.number().optional().describe('Agency ID (may differ from the calling agency)'),
-  "active": zod.boolean().optional().describe('Whether the user is active'),
-  "firstname": zod.string().optional(),
-  "lastname": zod.string().optional(),
-  "email": zod.email().optional(),
-  "phone": zod.string().optional().describe('Phone number with country code'),
-  "fax": zod.string().nullish(),
-  "mobile": zod.string().nullish(),
-  "language": zod.string().optional().describe('ISO 639-1 language code'),
-  "group": zod.number().optional().describe('User group \/ profile'),
-  "birthday_at": zod.iso.date().nullish().describe('User\'s date of birth. \*\*Private field\*\*: only visible if you have the appropriate access rights'),
-  "timezone": zod.string().optional(),
-  "picture": zod.url().nullish().describe('Profile picture URL'),
-  "created_at": zod.iso.datetime({"offset":true}).optional(),
-  "updated_at": zod.iso.datetime({"offset":true}).optional()
-}).describe('Agency user \/ negotiator')).optional()
+  "id": zod.coerce.number().nullish(),
+  "agency": zod.coerce.number().nullish().describe('Agency ID (may differ from the calling agency)'),
+  "active": zod.coerce.boolean().nullish().describe('Whether the user is active'),
+  "firstname": zod.coerce.string().nullish(),
+  "lastname": zod.coerce.string().nullish(),
+  "email": zod.coerce.string().nullish(),
+  "phone": zod.coerce.string().nullish().describe('Phone number with country code'),
+  "fax": zod.coerce.string().nullish(),
+  "mobile": zod.coerce.string().nullish(),
+  "language": zod.coerce.string().nullish().describe('ISO 639-1 language code'),
+  "group": zod.coerce.number().nullish().describe('User group \/ profile'),
+  "birthday_at": zod.coerce.string().nullish().describe('User\'s date of birth. \*\*Private field\*\*: only visible if you have the appropriate access rights'),
+  "timezone": zod.coerce.string().nullish(),
+  "picture": zod.coerce.string().nullish().describe('Profile picture URL'),
+  "created_at": zod.coerce.string().nullish(),
+  "updated_at": zod.coerce.string().nullish()
+}).describe('Agency user \/ negotiator')).nullish()
 }))
 
 
@@ -2031,8 +2031,8 @@ export const ListUsersResponse = zod.object({
  * @summary Retrieve actions list of a specific user
  */
 export const GetUserActionsParams = zod.object({
-  "agency_id": zod.number().describe('Unique ID of the agency'),
-  "user_id": zod.number().describe('Unique ID of the user\/agent')
+  "agency_id": zod.coerce.number().describe('Unique ID of the agency'),
+  "user_id": zod.coerce.number().describe('Unique ID of the user\/agent')
 })
 
 export const getUserActionsQueryLimitDefault = 1000;
@@ -2041,38 +2041,38 @@ export const getUserActionsQueryLimitMax = 1000;
 export const getUserActionsQueryOffsetDefault = 0;
 
 export const GetUserActionsQueryParams = zod.object({
-  "limit": zod.number().max(getUserActionsQueryLimitMax).default(getUserActionsQueryLimitDefault).describe('Number of records to return (max: 1000)'),
-  "offset": zod.number().default(getUserActionsQueryOffsetDefault).describe('Number of records to skip'),
-  "type": zod.number().optional().describe('Filter by action type → see catalog action_type')
+  "limit": zod.coerce.number().max(getUserActionsQueryLimitMax).default(getUserActionsQueryLimitDefault).describe('Number of records to return (max: 1000)'),
+  "offset": zod.coerce.number().default(getUserActionsQueryOffsetDefault).describe('Number of records to skip'),
+  "type": zod.coerce.number().nullish().describe('Filter by action type → see catalog action_type')
 })
 
 export const GetUserActionsResponse = zod.object({
-  "total_items": zod.number().optional().describe('Total number of items (regardless of pagination)'),
-  "timestamp": zod.number().optional().describe('UNIX timestamp of the most recent item in the list')
+  "total_items": zod.coerce.number().nullish().describe('Total number of items (regardless of pagination)'),
+  "timestamp": zod.coerce.number().nullish().describe('UNIX timestamp of the most recent item in the list')
 }).and(zod.object({
   "actions": zod.array(zod.object({
-  "id": zod.string().optional().describe('Action ID (returned as string)'),
-  "type": zod.string().optional().describe('Type d\'action → voir catalog action_type'),
-  "user": zod.string().optional().describe('User ID (should be equal to {user_id})'),
-  "contact": zod.string().nullish().describe('Associated contact ID'),
-  "date": zod.iso.date().optional().describe('Date de l\'action'),
-  "time_start": zod.string().nullish().describe('Start time (HH:MM:SS)'),
-  "time_end": zod.string().nullish().describe('End time (HH:MM:SS)'),
-  "subject": zod.string().nullish().describe('Action subject (can be the subject of an email)'),
-  "content": zod.string().nullish().describe('Action content (can be the body of an email)'),
+  "id": zod.coerce.string().nullish().describe('Action ID (returned as string)'),
+  "type": zod.coerce.string().nullish().describe('Type d\'action → voir catalog action_type'),
+  "user": zod.coerce.string().nullish().describe('User ID (should be equal to {user_id})'),
+  "contact": zod.coerce.string().nullish().describe('Associated contact ID'),
+  "date": zod.coerce.string().nullish().describe('Date de l\'action'),
+  "time_start": zod.coerce.string().nullish().describe('Start time (HH:MM:SS)'),
+  "time_end": zod.coerce.string().nullish().describe('End time (HH:MM:SS)'),
+  "subject": zod.coerce.string().nullish().describe('Action subject (can be the subject of an email)'),
+  "content": zod.coerce.string().nullish().describe('Action content (can be the body of an email)'),
   "properties": zod.object({
-  "id": zod.string().optional(),
-  "report": zod.string().nullish(),
-  "price": zod.string().optional(),
-  "currency": zod.string().optional(),
-  "rating": zod.string().nullish(),
-  "assessment": zod.string().nullish()
+  "id": zod.coerce.string().nullish(),
+  "report": zod.coerce.string().nullish(),
+  "price": zod.coerce.string().nullish(),
+  "currency": zod.coerce.string().nullish(),
+  "rating": zod.coerce.string().nullish(),
+  "assessment": zod.coerce.string().nullish()
 }).nullish().describe('Property\/properties associated with the action'),
-  "referral": zod.string().nullish().describe('Action origin'),
-  "subreferral": zod.string().nullish().describe('Action sub-origin'),
-  "created_at": zod.iso.datetime({"offset":true}).optional(),
-  "updated_at": zod.iso.datetime({"offset":true}).optional()
-})).optional()
+  "referral": zod.coerce.string().nullish().describe('Action origin'),
+  "subreferral": zod.coerce.string().nullish().describe('Action sub-origin'),
+  "created_at": zod.coerce.string().nullish(),
+  "updated_at": zod.coerce.string().nullish()
+})).nullish()
 }))
 
 
@@ -2087,8 +2087,8 @@ export const GetUserActionsResponse = zod.object({
  * @summary Crossing list (matched properties) for a specific request
  */
 export const ListRequestCrossingsParams = zod.object({
-  "agency_id": zod.number().describe('Unique ID of the agency'),
-  "request_id": zod.number().describe('Unique ID of the request de recherche')
+  "agency_id": zod.coerce.number().describe('Unique ID of the agency'),
+  "request_id": zod.coerce.number().describe('Unique ID of the request de recherche')
 })
 
 export const listRequestCrossingsQueryLimitDefault = 10000;
@@ -2097,21 +2097,21 @@ export const listRequestCrossingsQueryLimitMax = 10000;
 export const listRequestCrossingsQueryOffsetDefault = 0;
 
 export const ListRequestCrossingsQueryParams = zod.object({
-  "limit": zod.number().max(listRequestCrossingsQueryLimitMax).default(listRequestCrossingsQueryLimitDefault).describe('Number of records to return (max: 10000)'),
-  "offset": zod.number().default(listRequestCrossingsQueryOffsetDefault).describe('Number of records to skip'),
-  "timestamp": zod.number().optional().describe('Returns crossings updated since this UNIX timestamp'),
-  "step": zod.number().optional().describe('Filtrer par step (1=To suggest, 2=Already suggested, 3=Not suggested)')
+  "limit": zod.coerce.number().max(listRequestCrossingsQueryLimitMax).default(listRequestCrossingsQueryLimitDefault).describe('Number of records to return (max: 10000)'),
+  "offset": zod.coerce.number().default(listRequestCrossingsQueryOffsetDefault).describe('Number of records to skip'),
+  "timestamp": zod.coerce.number().nullish().describe('Returns crossings updated since this UNIX timestamp'),
+  "step": zod.coerce.number().nullish().describe('Filtrer par step (1=To suggest, 2=Already suggested, 3=Not suggested)')
 })
 
 export const ListRequestCrossingsResponse = zod.object({
-  "total_items": zod.number().optional().describe('Total number of items (regardless of pagination)'),
-  "timestamp": zod.number().optional().describe('UNIX timestamp of the most recent item in the list')
+  "total_items": zod.coerce.number().nullish().describe('Total number of items (regardless of pagination)'),
+  "timestamp": zod.coerce.number().nullish().describe('UNIX timestamp of the most recent item in the list')
 }).and(zod.object({
   "crossings": zod.array(zod.object({
-  "property_id": zod.number().optional().describe('ID of the matched property'),
-  "step_id": zod.union([zod.literal(1),zod.literal(2),zod.literal(3)]).optional().describe('1=To suggest, 2=Already suggested, 3=Not suggested'),
-  "total": zod.string().optional().describe('Matching score from 0 to 100'),
-  "created_at": zod.iso.datetime({"offset":true}).optional(),
-  "updated_at": zod.iso.datetime({"offset":true}).optional()
-})).optional()
+  "property_id": zod.coerce.number().nullish().describe('ID of the matched property'),
+  "step_id": zod.union([zod.literal(1),zod.literal(2),zod.literal(3)]).nullish().describe('1=To suggest, 2=Already suggested, 3=Not suggested'),
+  "total": zod.coerce.string().nullish().describe('Matching score from 0 to 100'),
+  "created_at": zod.coerce.string().nullish(),
+  "updated_at": zod.coerce.string().nullish()
+})).nullish()
 }))

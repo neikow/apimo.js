@@ -5,6 +5,42 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 2.0.1 — 2026-06-26
+
+Fixes runtime response-validation crashes caused by the vendored OpenAPI spec
+being stricter than what the live Apimo API actually returns. `fetchProperties`
+(and the other `fetch*` methods) previously threw `ApiResponseValidationError`
+on real payloads, e.g.:
+
+```
+[properties.0.reference]  Invalid input: expected string, received number
+[properties.0.user.id]    Invalid input: expected number, received string
+[properties.0.ranking]    Invalid input: expected number, received null
+[properties.0.created_at] Invalid ISO datetime
+```
+
+### Fixed
+
+- **Generated Zod schemas are now loosened to match reality.** A post-codegen
+  step (`scripts/lenient-zod.mjs`, wired into `yarn gen:api`) rewrites the
+  generated schemas to:
+  - treat date fields as plain strings — the API returns
+    `YYYY-MM-DD HH:MM:SS`, not ISO 8601 (the field descriptions already
+    document this format);
+  - coerce `number` / `string` / `boolean` scalars, so the API serialising a
+    number as a string (or `reference` as a number) no longer fails;
+  - accept `null` wherever the spec only marked a field optional
+    (`.optional()` → `.nullish()`), preserving `null` rather than coercing it
+    to `0` / `""`.
+
+### Added
+
+- **`validateResponse` config** (`'error' | 'warn' | 'off'`, default `'warn'`).
+  Controls what happens when a response still fails validation despite the
+  loosened schemas — so future spec drift degrades to a logged warning and the
+  raw payload, instead of hard-crashing a sync. Pass `'error'` to restore the
+  strict 2.0.0 behaviour, or `'off'` to skip validation entirely.
+
 ## 2.0.0 — 2026-06-26 (BREAKING)
 
 Apimo published an official **OpenAPI 3 specification**. This library now

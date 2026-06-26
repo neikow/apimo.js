@@ -1,6 +1,6 @@
 {
   "name": "apimo.js",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "A wrapper for the Apimo API with catalog caching for building custom Real Estate website using their technologies.",
   "author": "Vitaly Lysen <vitaly@lysen.dev> (https://lysen.dev)",
   "license": "MIT",
@@ -34,7 +34,7 @@
   ],
   "scripts": {
     "dev": "",
-    "gen:api": "npx --yes orval@^8.19.0 --config ./orval.config.ts",
+    "gen:api": "npx --yes orval@^8.19.0 --config ./orval.config.ts && node scripts/lenient-zod.mjs",
     "build": "tsc",
     "run": "node dist/index.js",
     "test": "vitest run",
