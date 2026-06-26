@@ -1,0 +1,4589 @@
+openapi: 3.0.3
+info:
+  title: Apimo Webservice API
+  description: |
+    Complete Apimo API documentation for real estate providers.
+    Access agencies, properties, contacts, leads and parameters.
+
+    **Authentication** : HTTP Basic Auth with `provider_id:token`
+
+    > ⚠️ **Note on error codes** : the documented HTTP codes (401, 403, 404, 422, 500)
+    > follow REST standard conventions. If in doubt, refer to the logs of your real requests.
+  version: 1.0.0
+  contact:
+    name: Apimo Support
+    url: https://apimo.net/fr/contact
+
+servers:
+  - description: SwaggerHub API Auto Mocking
+    url: https://virtserver.swaggerhub.com/apimo-8ef/Api3/1.0.0
+  - url: https://api.apimo.pro
+    description: Production server
+
+tags:
+  - name: Catalogs
+    description: Reference values (property types, statuses, categories...)
+  - name: Agencies
+    description: Agencies and business units
+  - name: Properties
+    description: Real estate properties (listings)
+  - name: Property Media
+    description: Media attached to a property (photos, videos, documents)
+  - name: Property Provider
+    description: Management of property publishing on partner portals
+  - name: Contacts
+    description: Agency client contacts
+  - name: Leads
+    description: Prospects and incoming requests
+  - name: Requests
+    description: Search requests
+  - name: Actions
+    description: Actions and activities
+  - name: Contracts
+    description: Contracts (mandates, rentals...)
+  - name: Residences
+    description: Residences and new developments
+  - name: Users
+    description: Agency users and negotiators
+
+components:
+  securitySchemes:
+    basicAuth:
+      type: http
+      scheme: basic
+      description: 'Basic Auth : provider_id:token'
+
+  # ─────────────────────────────────────────
+  # RÉPONSES D'ERREUR RÉUTILISABLES
+  # ─────────────────────────────────────────
+  responses:
+    Unauthorized:
+      description: 401 - Authentication required. Please check your provider ID and token.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+                example: Invalid credentials
+
+    Forbidden:
+      description: 403 - Access denied. You do not have rights to this resource.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+                example: Access denied to this agency
+
+    NotFound:
+      description: 404 - Resource not found.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+                example: Resource not found
+
+    UnprocessableEntity:
+      description: 422 - Invalid data.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+                example: Validation failed
+              errors:
+                type: object
+                additionalProperties:
+                  type: array
+                  items:
+                    type: string
+
+    InternalServerError:
+      description: 500 - Internal Apimo server error.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+                example: Internal server error
+
+  schemas:
+    PaginatedResponse:
+      type: object
+      properties:
+        total_items:
+          type: integer
+          description: Total number of items (regardless of pagination)
+        timestamp:
+          type: integer
+          description: UNIX timestamp of the most recent item in the list
+
+    CatalogList:
+      type: array
+      items:
+        type: object
+        properties:
+          name: {type: string}
+          path: {type: string}
+
+    CatalogEntry:
+      type: array
+      items:
+        type: object
+        properties:
+          id: {type: integer}
+          culture: {type: string}
+          name: {type: string}
+          name_plurial:
+            type: string
+            nullable: true
+
+    # ─────────────────────────────────────────
+    # SCHÉMA AGENCY
+    # ─────────────────────────────────────────
+    Agency:
+      type: object
+      description: Real estate agency (business unit)
+      properties:
+        id:
+          type: integer
+          description: Unique ID of the agency
+          example: 182
+        name:
+          type: string
+          description: Agency name
+          example: Agence Riviera Immobilier
+        address:
+          type: string
+          description: Postal address
+          example: 12 rue de la Paix
+        zipcode:
+          type: string
+          description: Postal code
+          example: '06000'
+        city:
+          type: string
+          description: City
+          example: Nice
+        country:
+          type: string
+          description: ISO 3166-1 alpha-2 country code
+          example: FR
+        phone:
+          type: string
+          description: Phone number with country code
+          example: '+33492000000'
+        fax:
+          type: string
+          nullable: true
+          description: Fax number with country code
+        email:
+          type: string
+          format: email
+          description: Agency contact email
+          example: contact@riviera-immo.fr
+        website:
+          type: string
+          format: uri
+          nullable: true
+          description: Agency website
+          example: 'https://riviera-immo.fr'
+        picture:
+          type: string
+          format: uri
+          nullable: true
+          description: URL of the agency logo
+        created_at:
+          type: string
+          format: date-time
+          description: Creation date
+        updated_at:
+          type: string
+          format: date-time
+          description: Last update date
+        subscription:
+          type: string
+          nullable: true
+          description: 'Agency subscription type. **Private field**: only visible if you have the appropriate access rights'
+
+    # ─────────────────────────────────────────
+    # SCHÉMA USER (négociateur)
+    # ─────────────────────────────────────────
+    User:
+      type: object
+      description: Agency user / negotiator
+      properties:
+        id:
+          type: integer
+          example: 10
+        agency:
+          type: integer
+          description: Agency ID (may differ from the calling agency)
+          example: 182
+        active:
+          type: boolean
+          description: Whether the user is active
+        firstname:
+          type: string
+          example: Jean
+        lastname:
+          type: string
+          example: Dupont
+        email:
+          type: string
+          format: email
+          example: jean.dupont@agence.fr
+        phone:
+          type: string
+          description: Phone number with country code
+          example: '+33600000000'
+        fax:
+          type: string
+          nullable: true
+        mobile:
+          type: string
+          nullable: true
+          example: '+33611111111'
+        language:
+          type: string
+          description: ISO 639-1 language code
+          example: fr
+        group:
+          type: integer
+          description: User group / profile
+        birthday_at:
+          type: string
+          format: date
+          nullable: true
+          description: "User's date of birth. **Private field**: only visible if you have the appropriate access rights"
+        timezone:
+          type: string
+          example: Europe/Paris
+        picture:
+          type: string
+          format: uri
+          nullable: true
+          description: Profile picture URL
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    # ─────────────────────────────────────────
+    # SCHÉMA PROPERTY (GET uniquement - source doc officielle)
+    # ─────────────────────────────────────────
+    Property:
+      type: object
+      description: 'Complete property object returned for reading (GET) - source: official Apimo documentation'
+      properties:
+        id:
+          type: integer
+          description: Unique ID of the property
+          example: 181297
+        reference:
+          type: string
+          description: Human-readable reference of the property
+          example: '24367'
+        agency:
+          type: integer
+          description: ID of the agency owning the property
+          example: 182
+        user:
+          allOf:
+            - $ref: '#/components/schemas/User'
+          description: Responsible negotiator
+        step:
+          type: integer
+          description: |
+            Main step of the property:
+            - `1` = In progress
+            - `2` = On hold
+            - `3` = Completed
+            - `4` = Deleted
+          enum: [1, 2, 3, 4]
+          example: 1
+        status:
+          type: integer
+          description: |
+            Precise status of the property (sub-category of step):
+            - `1` = In progress
+            - `20` = Awaiting mandate
+            - `21` = Expired mandate
+            - `22` = Under offer / reservation
+            - `24` = Under sale/rental contract
+            - `25` = Awaiting deed/lease
+            - `27` = Awaiting correction
+            - `28` = Awaiting validation
+            - `29` = Other
+            - `30` = Sold/rented by the agency
+            - `31` = Sold/rented by the owner
+            - `32` = Sold/rented by a competitor
+            - `33` = Withdrawn by the agency
+            - `34` = Withdrawn by the owner
+            - `35` = Sale/rental cancelled
+            - `39` = Other
+            - `40` = Delete this record
+          enum: [1, 20, 21, 22, 24, 25, 27, 28, 29, 30, 31, 32, 33, 34, 35, 39, 40]
+          example: 1
+        group:
+          type: integer
+          description: Database group → see catalog property_group
+          example: 1
+        parent:
+          type: integer
+          nullable: true
+          description: Parent property ID (e.g. apartment in a new development)
+          example: 0
+        ranking:
+          type: integer
+          minimum: 1
+          maximum: 5
+          description: Property rating from 1 to 5
+          example: 3
+        category:
+          type: integer
+          description: |
+            Main category of the property:
+            - `1` = Sale
+            - `2` = Rental
+            - `3` = Seasonal rental
+            - `4` = New development
+            - `5` = Life annuity
+            - `6` = Auction
+          enum: [1, 2, 3, 4, 5, 6]
+          example: 2
+        subcategory:
+          type: integer
+          description: Property sub-category → see catalog property_subcategory
+          example: 21
+        name:
+          type: string
+          nullable: true
+          description: Property name
+          example: ''
+        type:
+          type: integer
+          description: |
+            Type of real estate property:
+            - `1` = Apartment
+            - `2` = House
+            - `3` = Land
+            - `4` = Commercial
+            - `5` = Garage / Parking
+            - `6` = Building
+            - `7` = Office
+            - `8` = Boat
+            - `9` = Business premises / Warehouses
+            - `10` = Cellar / Box
+          enum: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+          example: 1
+        subtype:
+          type: integer
+          description: |
+            Sous-type précis du bien :
+            - `1` = Triplex, `2` = Terrain constructible, `3` = Terrain inconstructible
+            - `4` = Penthouse, `5` = Appartement, `6` = Studio
+            - `7` = Château, `8` = Commerce, `9` = Duplex, `10` = Manoir
+            - `11` = Ferme, `12` = Loft, `13` = Maison de village, `14` = Villa
+            - `15` = Appartement villa, `16` = Grange, `17` = Ruine, `18` = Maison
+            - `19` = Propriété, `20` = Ensemble immobilier, `21` = Moulin, `22` = Garage
+            - `23` = Fermette, `24` = Immeuble, `25` = Maison de ville, `26` = Mobile home
+            - `27` = Chaumière, `28` = Chambre, `29` = Hangar, `30` = Mas
+            - `31` = Local, `32` = Chalet, `33` = Local commercial, `34` = Fonds de commerce
+            - `35` = Droit au bail, `36` = Bureau, `37` = Hôtel particulier, `38` = Gérance
+            - `39` = Exploitation agricole, `40` = Cave, `41` = Entrepôt, `42` = Remise
+            - `43` = Parking, `44` = Hôtel, `45` = Haras, `46` = Terrain, `47` = Bastide
+            - `48` = Bastidon, `49` = Entreprise, `50` = Propriété viticole
+            - `51` = Yacht, `52` = Péniche, `53` = Voilier, `54` = Catamaran
+            - `55` = Domaine équestre, `56` = Maison d'hôtes, `57` = Gîte, `58` = Riad
+            - `59` = Box, `60` = Attique, `61` = Arcade, `62` = Boutique, `63` = Atelier
+            - `64` = Shophouse, `65` = Borey, `66` = Condo, `67` = Usine
+            - `68` = Appart'hôtel, `69` = Villa jumelée, `70` = Maison de plain-pied
+            - `71` = Maison jumelée, `72` = Bungalow, `73` = Maison de plage
+            - `74` = Place de port, `77` = Île privée, `78` = Terrain résidentiel
+            - `79` = Terrain commercial, `80` = Lotissement, `81` = Domaine de chasse
+            - `82` = Bateau à moteur, `83` = Pavillon, `84` = Ranch, `85` = Lac
+            - `87` = Atelier artisanal, `88` = Pavillon, `89` = Cellier, `90` = Grenier
+            - `103` = Terrain agricole, `104` = Local et fonds de commerce
+            - `105` = Bâtiment historique, `110` = Maisonette, `111` = Dépendance
+            - `112` = Refuge, `113` = Appartement type maison, `114` = Appartement de plain-pied
+            - `115` = Cabinet, `116` = Maison préfabriquée
+          enum: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 77, 78, 79, 80, 81, 82, 83, 84, 85, 87, 88, 89, 90, 103, 104, 105, 110, 111, 112, 113, 114, 115, 116]
+          example: 5
+        agreement:
+          type: object
+          description: Mandate information
+          properties:
+            type:
+              type: integer
+              description: Mandate type → see catalog property_agreement
+              example: 1
+            reference:
+              type: string
+              description: Mandate reference
+              example: '1158'
+            start_at:
+              type: string
+              format: date
+              description: Mandate start date
+              example: 2016-04-12
+            end_at:
+              type: string
+              format: date
+              description: Mandate end date
+              example: 2016-10-12
+        block_name:
+          type: string
+          nullable: true
+          description: Building name or reference
+        lot_reference:
+          type: string
+          nullable: true
+          description: Lot reference
+        cadastre_reference:
+          type: string
+          nullable: true
+          description: Cadastral reference
+        stairs_reference:
+          type: string
+          nullable: true
+          description: Staircase reference
+        address:
+          type: string
+          nullable: true
+          description: Property address
+          example: 12 rue Gambetta
+        address_more:
+          type: string
+          nullable: true
+          description: Additional address details
+        publish_address:
+          type: boolean
+          description: Permission to publish the address
+          example: false
+        country:
+          type: string
+          description: ISO 3166-1 alpha-2 country code
+          example: FR
+        region:
+          type: object
+          nullable: true
+          properties:
+            id: {type: integer}
+            name: {type: string}
+        city:
+          type: object
+          properties:
+            id:
+              type: integer
+              example: 2123
+            name:
+              type: string
+              example: Nice
+            zipcode:
+              type: string
+              example: '06100'
+        district:
+          type: object
+          nullable: true
+          properties:
+            id:
+              type: integer
+              example: 18
+            name:
+              type: string
+              example: Gambetta
+        longitude:
+          type: number
+          format: float
+          description: Longitude GPS
+          example: 7.25315
+        latitude:
+          type: number
+          format: float
+          description: Latitude GPS
+          example: 43.69821
+        radius:
+          type: integer
+          nullable: true
+          description: Radius in meters (0 if publish_address=true)
+        altitude:
+          type: integer
+          nullable: true
+          description: Altitude in meters
+        area:
+          type: object
+          description: Property area
+          properties:
+            unit:
+              type: integer
+              description: Area unit ID → see catalog unit_area
+              example: 1
+            value:
+              type: number
+              description: Main area
+              example: 52.12
+            total:
+              type: number
+              nullable: true
+              description: Total area (must be >= value)
+            weighted:
+              type: number
+              nullable: true
+              description: Weighted area
+        rooms:
+          type: number
+          description: Number of rooms (can be decimal)
+          example: 2.0
+        bedrooms:
+          type: integer
+          description: Number of bedrooms
+          example: 1
+        sleeps:
+          type: integer
+          nullable: true
+          description: Number of sleeping places
+        price:
+          type: object
+          description: Property price
+          properties:
+            value:
+              type: number
+              description: Prix
+              example: 750
+            max:
+              type: number
+              nullable: true
+              description: Maximum price
+            fees:
+              type: number
+              nullable: true
+              description: Fees
+              example: 70
+            period:
+              type: integer
+              nullable: true
+              description: Rental frequency → see catalog property_period
+            hide:
+              type: boolean
+              description: Hide the price
+              example: false
+            inventory:
+              type: number
+              nullable: true
+              description: Inventory fees (rental)
+            deposit:
+              type: number
+              nullable: true
+              description: Security deposit
+            currency:
+              type: string
+              description: Currency ISO 4217
+              example: EUR
+            commission:
+              type: number
+              nullable: true
+              description: Customer commission
+            guarantee:
+              type: number
+              nullable: true
+              description: Guarantee
+            transfer_tax:
+              type: number
+              nullable: true
+              description: Notary fees and transfer taxes
+            contribution:
+              type: number
+              nullable: true
+              description: Initial contribution (life annuity)
+            pension:
+              type: number
+              nullable: true
+              description: Life annuity
+            tenant:
+              type: number
+              nullable: true
+              description: Current tenant rent
+            vat:
+              type: boolean
+              nullable: true
+              description: Price including VAT
+            sold:
+              type: number
+              nullable: true
+              description: Final sale price
+            sold_at:
+              type: string
+              format: date
+              nullable: true
+              description: Sale signing date
+            commission_owner:
+              type: number
+              nullable: true
+              description: 'Commission for the owner. **Private field**: only visible if you have the appropriate access rights'
+            commission_customer:
+              type: number
+              nullable: true
+              description: 'Commission for the customer. **Private field**: only visible if you have the appropriate access rights'
+            net_seller:
+              type: number
+              nullable: true
+              description: 'Net seller amount after deduction of commissions. **Private field**: only visible if you have the appropriate access rights'
+            estimation:
+              type: object
+              nullable: true
+              description: 'Price estimation. **Private field**: only visible if you have the appropriate access rights'
+              properties:
+                min:
+                  type: number
+                  nullable: true
+                  description: Minimum estimation
+                max:
+                  type: number
+                  nullable: true
+                  description: Maximum estimation
+            negotiable:
+              type: number
+              nullable: true
+              description: 'Negotiable price value. **Private field**: only visible if you have the appropriate access rights'
+        owner:
+          type: integer
+          nullable: true
+          description: 'Owner reference (linked to contacts endpoint). **Private field**: only visible if you have the appropriate access rights'
+        visit:
+          type: object
+          nullable: true
+          description: 'Visit information. **Private field**: only visible if you have the appropriate access rights'
+          properties:
+            contact:
+              type: integer
+              nullable: true
+              description: Contact for visiting (reference linked to contacts endpoint)
+            comment:
+              type: string
+              nullable: true
+              description: Visit instructions
+        exchanges:
+          type: array
+          description: 'List of the portals to publish. **Private field**: only visible if you have the appropriate access rights'
+          items:
+            type: object
+        status_comment:
+          type: string
+          nullable: true
+          description: 'Status description. **Private field**: only visible if you have the appropriate access rights'
+        logs:
+          type: array
+          description: 'Modification history. **Private field**: only visible if you have the appropriate access rights'
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+                description: Field updated
+              value:
+                type: string
+                description: New value
+              date:
+                type: string
+                format: date-time
+                description: Date of the update
+        residence:
+          type: object
+          nullable: true
+          description: Residence / building
+          properties:
+            id:
+              type: integer
+              nullable: true
+            type:
+              type: integer
+              description: Residence type → see catalog property_building
+              example: 0
+            fees:
+              type: number
+              nullable: true
+              description: Monthly charges
+              example: 70
+            period:
+              type: integer
+              nullable: true
+              description: Charge frequency → see catalog property_period
+            lots:
+              type: integer
+              nullable: true
+              description: Number of lots
+              example: 0
+        view:
+          type: object
+          nullable: true
+          properties:
+            type:
+              type: integer
+              description: View type → see catalog property_view_type
+              example: 3
+            landscape:
+              type: array
+              items:
+                type: integer
+              description: Landscapes → see catalog property_view_landscape
+        construction:
+          type: object
+          nullable: true
+          properties:
+            method:
+              type: array
+              items: {type: integer}
+              description: Construction method → see catalog property_construction_method
+            construction_year:
+              type: integer
+              nullable: true
+              description: Construction year
+            construction_step:
+              type: integer
+              nullable: true
+              description: Construction stage → see catalog construction_step
+            renovation_year:
+              type: integer
+              nullable: true
+              description: Renovation year
+        floor:
+          type: object
+          nullable: true
+          properties:
+            type:
+              type: integer
+              description: Floor type → see catalog property_floor
+              example: 5
+            value:
+              type: integer
+              description: 'Floor number (0=ground, 1=first...)'
+              example: 3
+            levels:
+              type: integer
+              nullable: true
+              description: Levels of the property in the building
+            floors:
+              type: integer
+              nullable: true
+              description: Total number of floors in the building
+        heating:
+          type: object
+          nullable: true
+          properties:
+            device:
+              type: integer
+              nullable: true
+              description: Heating device → see catalog property_heating_device
+            access:
+              type: integer
+              description: Heating access → see catalog property_heating_access
+              example: 1
+            type:
+              type: integer
+              description: Heating type → see catalog property_heating_type
+              example: 1
+        water:
+          type: object
+          nullable: true
+          properties:
+            hot_device:
+              type: integer
+              nullable: true
+              description: Hot water device → see catalog property_hot_water_device
+              example: 3
+            hot_access:
+              type: integer
+              nullable: true
+              description: Hot water access → see catalog property_hot_water_access
+              example: 1
+            waste:
+              type: integer
+              nullable: true
+              description: Waste water type → see catalog property_waste_water
+              example: 2
+        condition:
+          type: integer
+          nullable: true
+          description: Property condition → see catalog property_condition
+          example: 3
+        standing:
+          type: integer
+          nullable: true
+          description: Standing → see catalog property_standing
+          example: 1
+        style:
+          type: object
+          nullable: true
+          properties:
+            name:
+              type: string
+              example: RECENT
+        facades:
+          type: integer
+          nullable: true
+          description: Number of facades
+        url:
+          type: string
+          format: uri
+          nullable: true
+          description: Dedicated property website
+        availability:
+          type: integer
+          nullable: true
+          description: Availability → see catalog property_availability
+        available_at:
+          type: string
+          format: date
+          nullable: true
+          description: Availability date (free rental)
+        delivered_at:
+          type: string
+          format: date
+          nullable: true
+          description: Delivery date (new development)
+        activities:
+          type: array
+          items: {type: integer}
+          description: Activities → see catalog property_activity
+        orientations:
+          type: array
+          items: {type: integer}
+          description: Orientations → see catalog property_orientation
+          example: [3]
+        services:
+          type: array
+          items: {type: integer}
+          description: Services → see catalog property_service
+          example: [6, 9, 1, 23]
+        proximities:
+          type: array
+          items: {type: integer}
+          description: Proximities → see catalog property_proximity
+          example: [1, 7, 23, 4]
+        tags:
+          type: array
+          items: {type: integer}
+          description: Tags → see catalog tags
+        tags_customized:
+          type: array
+          items:
+            type: object
+            properties:
+              comment: {type: string}
+          description: Agency customized tags
+        pictures:
+          type: array
+          description: 'Property photos. To add a photo, use POST /properties/{property_id}/pictures'
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+                example: 66321497
+              rank:
+                type: integer
+                description: Display order
+                example: 1
+              url:
+                type: string
+                format: uri
+                example: 'https://s3-eu-west-1.amazonaws.com/apimo/pictures/...'
+              width_max:
+                type: integer
+                description: Max width in pixels
+                example: 1920
+              height_max:
+                type: integer
+                description: Max height in pixels
+                example: 1440
+              comments:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    language: {type: string}
+                    comment: {type: string}
+        medias:
+          type: array
+          description: 'Property media (videos, virtual tours...). To add a media, use POST /properties/{property_id}/medias'
+          items:
+            type: object
+            properties:
+              type:
+                type: string
+                description: 'Media type (video, html...)'
+              value:
+                type: string
+                description: Media content or link
+        comments:
+          type: array
+          description: 'Multilingual descriptions of the property. To add/update a description, use POST /properties/{property_id}/comments'
+          items:
+            type: object
+            properties:
+              language:
+                type: string
+                description: ISO 639-1 language code
+                example: fr
+              title:
+                type: string
+                example: 2P CENTRE NICE
+              subtitle:
+                type: string
+                nullable: true
+              hook:
+                type: string
+                nullable: true
+              comment:
+                type: string
+                nullable: true
+                description: Short description
+              comment_full:
+                type: string
+                nullable: true
+                description: Full description
+        areas:
+          type: array
+          description: Room and area details
+          items:
+            type: object
+            properties:
+              type:
+                type: string
+                description: Room type → see catalog property_areas
+              number:
+                type: string
+                description: Quantity
+              area:
+                type: number
+                nullable: true
+                description: Room area
+              flooring:
+                type: string
+                nullable: true
+                description: Flooring type → see catalog property_flooring
+              ceiling_height:
+                type: number
+                nullable: true
+                description: Ceiling height
+              floor:
+                type: object
+                nullable: true
+                properties:
+                  id: {type: integer}
+                  value: {type: integer, nullable: true}
+              orientations:
+                type: array
+                items: {type: integer}
+              comments:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    language: {type: string}
+                    comment: {type: string}
+        regulations:
+          type: array
+          description: 'Diagnostics and regulations (energy rating, asbestos...)'
+          items:
+            type: object
+            properties:
+              type:
+                type: integer
+                description: Regulation type → see catalog property_regulation
+              value:
+                type: string
+                nullable: true
+                description: Diagnostic value
+              date:
+                type: string
+                format: date
+                nullable: true
+                description: Diagnostic date
+        financial:
+          type: array
+          description: Financial charges and revenues
+          items:
+            type: object
+            properties:
+              type:
+                type: integer
+                description: Charge/revenue type → see catalog property_financial
+              amount:
+                type: number
+                description: Amount in the property currency
+              year:
+                type: integer
+                description: Reference year
+        filling_rate:
+          type: number
+          nullable: true
+          description: 'Filling rate. **Private field**: only visible if you have the appropriate access rights'
+        private_comment:
+          type: string
+          nullable: true
+          description: 'Private description (not published). **Private field**: only visible if you have the appropriate access rights'
+        created_at:
+          type: string
+          format: date-time
+          description: "Creation date. Format returned by the API: 'YYYY-MM-DD HH:MM:SS'"
+          example: '2010-06-30T14:33:53Z'
+        updated_at:
+          type: string
+          format: date-time
+          description: "Last update date. Format returned by the API: 'YYYY-MM-DD HH:MM:SS'"
+          example: '2016-04-12T22:30:45Z'
+
+    # ─────────────────────────────────────────
+    # SCHÉMA PROPERTYINPUT (POST/PUT - exactement les champs de la doc officielle)
+    # ─────────────────────────────────────────
+    PropertyInput:
+      type: object
+      required: [reference]
+      description: Request body to create/update a property (POST/PUT). Contains ONLY the fields accepted for writing according to the official Apimo documentation — distinct from the Property schema used for reading (GET).
+      properties:
+        reference:
+          type: string
+          description: 'Your unique identifier for this property. **Required on creation (POST)**'
+          example: '24367'
+        user:
+          type: integer
+          description: 'ID of the user. **Required on creation (POST)**'
+          example: 10
+        step:
+          type: integer
+          description: 'Main step (in progress, on hold...) → see catalog property_step'
+          example: 1
+        status:
+          type: integer
+          description: Property status (sub-category of step) → see catalog property_status
+          example: 1
+        group:
+          type: integer
+          description: Database group → see catalog property_group
+          example: 1
+        parent:
+          type: integer
+          nullable: true
+          description: Parent property ID (e.g. apartment in a new development)
+        ranking:
+          type: integer
+          minimum: 1
+          maximum: 5
+          description: Property rating from 1 to 5
+        category:
+          type: integer
+          description: 'Property category (sale, rental...) → see catalog property_category'
+          example: 2
+        subcategory:
+          type: integer
+          description: Property sub-category → see catalog property_subcategory
+        name:
+          type: string
+          nullable: true
+          description: Property name
+        type:
+          type: integer
+          description: 'Property type (apartment, house...) → see catalog property_type'
+          example: 1
+        subtype:
+          type: integer
+          description: 'Property subtype (studio, villa...) → see catalog property_subtype'
+        agreement:
+          type: object
+          description: Mandate information
+          properties:
+            type:
+              type: integer
+              description: Mandate type → see catalog property_agreement
+            reference:
+              type: string
+              description: Human-readable mandate reference
+            start_at:
+              type: string
+              format: date
+              description: Mandate start date
+            end_at:
+              type: string
+              format: date
+              description: Mandate end date
+        publish_address:
+          type: boolean
+          description: Permission to publish the address details
+        address:
+          type: string
+          nullable: true
+          description: 'Address, street name'
+        address_more:
+          type: string
+          nullable: true
+          description: Additional address details
+        city:
+          type: string
+          description: Unique ID of the city - or - name of the city
+          example: Nice
+        zipcode:
+          type: string
+          description: Postal code du bien
+          example: '06100'
+        district:
+          type: string
+          nullable: true
+          description: Unique ID of the district - or - name of the district
+        country:
+          type: string
+          description: ISO 3166-1 alpha-2 country code
+          example: FR
+        longitude:
+          type: number
+          format: float
+          description: Longitude GPS
+        latitude:
+          type: number
+          format: float
+          description: Latitude GPS
+        area:
+          type: object
+          description: Property area
+          properties:
+            unit:
+              type: integer
+              description: Area unit ID → see catalog unit_area
+            value:
+              type: number
+              description: Decimal value of the area
+            total:
+              type: number
+              nullable: true
+              description: Total area (must be greater than value)
+            weighted:
+              type: number
+              nullable: true
+              description: Weighted area
+        rooms:
+          type: number
+          description: Number of rooms (can be decimal depending on the country)
+        sleeps:
+          type: integer
+          nullable: true
+          description: Number of sleeping places
+        price:
+          type: object
+          description: Property price
+          properties:
+            value:
+              type: number
+              description: Value of the price
+            max:
+              type: number
+              nullable: true
+              description: Max value of the price
+            fees:
+              type: number
+              nullable: true
+              description: Value of the rental fees
+            unit:
+              type: integer
+              description: Area unit ID → see catalog unit_area
+            period:
+              type: integer
+              nullable: true
+              description: Rental frequency → see catalog property_period
+            hide:
+              type: boolean
+              description: Hide the price
+            inventory:
+              type: number
+              nullable: true
+              description: Inventory fees (in case of rental)
+            deposit:
+              type: number
+              nullable: true
+              description: Security deposit pour le client
+            currency:
+              type: string
+              description: Currency ISO 4217
+              example: EUR
+            commission_owner:
+              type: number
+              nullable: true
+              description: Commission for the owner
+            commission_customer:
+              type: number
+              nullable: true
+              description: Commission for the customer
+            contribution:
+              type: number
+              nullable: true
+              description: Value of the initial contribution (life annuity)
+            pension:
+              type: number
+              nullable: true
+              description: Value of the pension (life annuity)
+            tenant:
+              type: number
+              nullable: true
+              description: Value of the current rental
+            sold:
+              type: number
+              nullable: true
+              description: Final price in case of sale
+            sold_at:
+              type: string
+              format: date
+              nullable: true
+              description: Date of the contract in case of sale
+            estimation:
+              type: object
+              nullable: true
+              description: Price estimation
+              properties:
+                min:
+                  type: number
+                  nullable: true
+                  description: Minimum estimation
+                max:
+                  type: number
+                  nullable: true
+                  description: Maximum estimation
+            negotiable:
+              type: number
+              nullable: true
+              description: Negotiable price value
+        owner:
+          type: integer
+          nullable: true
+          description: Unique ID of the contact (owner)
+        view:
+          type: object
+          nullable: true
+          properties:
+            type:
+              type: integer
+              description: View type → see catalog property_view_type
+            landscape:
+              type: array
+              items: {type: integer}
+              description: Array of landscapes → see catalog property_view_landscape
+        construction:
+          type: object
+          nullable: true
+          properties:
+            method:
+              type: array
+              items: {type: integer}
+              description: Array of construction methods → see catalog property_construction_method
+            construction_year:
+              type: integer
+              nullable: true
+              description: Construction year
+            renovation_year:
+              type: integer
+              nullable: true
+              description: Renovation year
+        floor:
+          type: object
+          nullable: true
+          properties:
+            type:
+              type: integer
+              description: Floor type → see catalog property_floor
+            levels:
+              type: integer
+              nullable: true
+              description: Number of levels of the property in the building
+            floors:
+              type: integer
+              nullable: true
+              description: Number of floors in the building
+        heating:
+          type: object
+          nullable: true
+          properties:
+            device:
+              type: integer
+              nullable: true
+              description: Heating device → see catalog property_heating_device
+            access:
+              type: integer
+              description: Heating access → see catalog property_heating_access
+            type:
+              type: integer
+              description: Heating type → see catalog property_heating_type
+        water:
+          type: object
+          nullable: true
+          properties:
+            hot_device:
+              type: integer
+              nullable: true
+              description: Hot water device → see catalog property_hot_water_device
+            hot_access:
+              type: integer
+              nullable: true
+              description: Hot water access → see catalog property_hot_water_access
+            waste:
+              type: integer
+              nullable: true
+              description: Waste water type → see catalog property_waste_water
+        condition:
+          type: integer
+          nullable: true
+          description: Property condition → see catalog property_condition
+        standing:
+          type: integer
+          nullable: true
+          description: 'Property standing (high standard, luxury) → see catalog property_standing'
+        facades:
+          type: integer
+          nullable: true
+          description: Number of facades du bien
+        availability:
+          type: integer
+          nullable: true
+          description: Property availability → see catalog property_availability
+        available_at:
+          type: string
+          format: date
+          nullable: true
+          description: Availability date (when the rental is free)
+        delivered_at:
+          type: string
+          format: date
+          nullable: true
+          description: Delivery date (for new construction)
+        orientations:
+          type: array
+          items: {type: integer}
+          description: Array of orientations → see catalog property_orientation
+        services:
+          type: array
+          items: {type: integer}
+          description: Array of services → see catalog property_service
+        proximities:
+          type: array
+          items: {type: integer}
+          description: Array of proximities → see catalog property_proximity
+        activities:
+          type: array
+          items: {type: integer}
+          description: Array of activities → see catalog property_activity
+        tags:
+          type: array
+          items: {type: integer}
+          description: Array of tags → see catalog tags
+        tags_customized:
+          type: array
+          items: {type: string}
+          description: Array of customized tags (different for each agency)
+        areas:
+          type: array
+          description: Room and area details
+          items:
+            type: object
+            properties:
+              type:
+                type: integer
+                description: Room type → see catalog property_areas
+              number:
+                type: integer
+                description: Quantity of this room/area
+              area:
+                type: number
+                nullable: true
+                description: Area of this room/area
+              flooring:
+                type: integer
+                nullable: true
+                description: Flooring type → see catalog property_flooring
+              ceiling_height:
+                type: number
+                nullable: true
+                description: Ceiling height of this room/area
+              floor:
+                type: object
+                nullable: true
+                properties:
+                  type:
+                    type: integer
+                    description: Floor type → see catalog property_floor
+                  value:
+                    type: integer
+                    nullable: true
+                    description: 'Value of the floor (0=ground, 1=first...)'
+              orientations:
+                type: array
+                items: {type: integer}
+                description: Array of orientations → see catalog property_orientation
+              comments:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    language:
+                      type: string
+                      description: ISO 639-1 language code
+                    comment:
+                      type: string
+                      description: Comment of this room/area
+        regulations:
+          type: array
+          description: Diagnostics and regulations
+          items:
+            type: object
+            properties:
+              type:
+                type: integer
+                description: 'Type of regulation, diagnostic or legal specification → see catalog property_regulation'
+              value:
+                type: string
+                nullable: true
+                description: Value of this regulation
+              date:
+                type: string
+                format: date
+                nullable: true
+                description: Date of the regulation
+        url:
+          type: string
+          format: uri
+          nullable: true
+          description: Dedicated property website
+        filling_rate:
+          type: number
+          nullable: true
+          description: Filling rate
+        private_comment:
+          type: string
+          nullable: true
+          description: Private description
+
+    Contact:
+      type: object
+      required: [category, user]
+      description: Agency client contact (individual or professional)
+      properties:
+        id:
+          type: integer
+          description: Identifiant unique du contact
+          example: 3021944
+        category:
+          type: integer
+          description: 'Contact category → see catalog contact_category (e.g. individual, professional). **Required on creation (POST)**'
+        user:
+          type: integer
+          description: 'ID of the responsible negotiator. **Required on creation (POST)**'
+          example: 10
+        password:
+          type: string
+          description: Password for Extranet access
+          nullable: true
+        activity:
+          type: integer
+          description: Main activity (for professionals only) → see catalog contact_activity
+          nullable: true
+        title:
+          type: integer
+          description: 'Title → see catalog contact_title (e.g. Mr., Mrs.)'
+          nullable: true
+        firstname:
+          type: string
+          description: Contact first name
+          example: Jean
+          nullable: true
+        lastname:
+          type: string
+          description: 'Last name. **Required on creation (POST) if company not provided**'
+          example: Dupont
+          nullable: true
+        company:
+          type: string
+          description: 'Company name. **Required on creation (POST) if lastname not provided**'
+          nullable: true
+        vat_number:
+          type: string
+          description: Company VAT number
+          nullable: true
+        spouse_title:
+          type: integer
+          description: Spouse title → see catalog contact_title
+          nullable: true
+        spouse_firstname:
+          type: string
+          description: Spouse first name
+          nullable: true
+        spouse_lastname:
+          type: string
+          description: Spouse last name
+          nullable: true
+        birthday_at:
+          type: string
+          format: date
+          description: Date of birth (format YYYY-MM-DD)
+          nullable: true
+          example: 1980-06-15
+        spouse_birthday_at:
+          type: string
+          format: date
+          description: Spouse date of birth (format YYYY-MM-DD)
+          nullable: true
+        email:
+          type: string
+          format: email
+          description: Email address
+          example: jean.dupont@email.fr
+          nullable: true
+        spouse_email:
+          type: string
+          format: email
+          description: Email address du conjoint
+          nullable: true
+        phone:
+          type: string
+          description: Landline phone
+          example: '+33492000000'
+          nullable: true
+        mobile:
+          type: string
+          description: Mobile phone
+          example: '+33611111111'
+          nullable: true
+        fax:
+          type: string
+          description: Fax number
+          nullable: true
+        address:
+          type: string
+          description: Postal address
+          nullable: true
+        address_more:
+          type: string
+          description: Additional address details
+          nullable: true
+        zipcode:
+          type: string
+          description: Postal code
+          example: '06000'
+          nullable: true
+        city:
+          type: string
+          description: City (name or reference)
+          example: Nice
+          nullable: true
+        country:
+          type: string
+          description: ISO 3166-1 alpha-2 country code
+          example: FR
+          nullable: true
+        nationality:
+          type: string
+          description: Nationality - ISO 3166-1 alpha-2 country code
+          example: FR
+          nullable: true
+        spouse_nationality:
+          type: string
+          description: Spouse nationality - ISO 3166-1 alpha-2 country code
+          nullable: true
+        taxcode:
+          type: string
+          description: Contact tax code
+          nullable: true
+        spouse_taxcode:
+          type: string
+          description: Spouse tax code
+          nullable: true
+        comment:
+          type: string
+          description: Free comment
+          nullable: true
+        relationship:
+          type: integer
+          description: Contact relationship → see catalog contact_relationship
+          nullable: true
+        civil_status:
+          type: integer
+          description: Marital status → see catalog contact_civil_status
+          nullable: true
+        children:
+          type: integer
+          description: Number of children
+          nullable: true
+        website:
+          type: string
+          format: uri
+          description: Contact website
+          nullable: true
+        mailing:
+          type: integer
+          description: Paper mailing subscription → see catalog subscription
+          nullable: true
+        emailing:
+          type: integer
+          description: Electronic mailing subscription → see catalog subscription
+          nullable: true
+        magazine:
+          type: integer
+          description: Magazine subscription → see catalog subscription
+          nullable: true
+        incoming_action_at:
+          type: string
+          format: date-time
+          description: Date of the last incoming action
+          nullable: true
+        outgoing_action_at:
+          type: string
+          format: date-time
+          description: Date of the last outgoing action
+          nullable: true
+        language:
+          type: array
+          description: ISO 639-1 language codes spoken by the contact
+          items:
+            type: string
+            example: fr
+        tags_customized:
+          type: array
+          description: Agency customized tags
+          items:
+            type: object
+            properties:
+              comment: {type: string}
+        created_at:
+          type: string
+          format: date-time
+          description: Creation date
+          example: '2024-01-15T10:30:00Z'
+        updated_at:
+          type: string
+          format: date-time
+          description: Last update date
+          example: '2024-06-01T14:00:00Z'
+
+    Lead:
+      type: object
+      required: [reference, type]
+      description: Incoming lead (prospect from a portal or form)
+      properties:
+        id:
+          type: integer
+          description: Unique ID of the lead
+          example: 123456
+        parent:
+          type: integer
+          nullable: true
+          description: Parent ID (to skip duplicates)
+        provider:
+          type: string
+          description: Source provider ID (returned as string)
+          example: '4'
+        agency:
+          type: string
+          description: Agency ID (returned as string)
+          example: '101'
+        type:
+          type: string
+          description: 'Lead type → see catalog lead_type. **Required on creation (POST)**'
+          example: '1'
+        step:
+          type: string
+          description: Lead step → see catalog lead_step
+          example: '4'
+        date:
+          type: string
+          format: date-time
+          description: 'Contact date (format YYYY-MM-DD HH:MM:SS)'
+          example: '2014-12-03T15:08:15Z'
+        start_at:
+          type: string
+          nullable: true
+          description: Rental start date criteria (MySQL format)
+        end_at:
+          type: string
+          nullable: true
+          description: Rental end date criteria (MySQL format)
+        reference:
+          type: string
+          description: 'Your own unique reference for this lead. **Required on creation (POST)**'
+          example: 194D1DDEDdE
+        lastname:
+          type: string
+          nullable: true
+          description: Prospect last name
+          example: DUPONT
+        firstname:
+          type: string
+          nullable: true
+          description: Prospect first name
+          example: Jean
+        email:
+          type: string
+          format: email
+          nullable: true
+          description: Email address du prospect
+          example: user@example.com
+        phone:
+          type: string
+          nullable: true
+          description: Prospect phone number
+        fax:
+          type: string
+          nullable: true
+          description: Prospect fax number
+        mobile:
+          type: string
+          nullable: true
+          description: Prospect mobile number
+        method:
+          type: string
+          nullable: true
+          description: Contact method
+        language:
+          type: string
+          description: ISO 639-1 language code du prospect
+          example: fr
+        country:
+          type: string
+          description: ISO 3166-1 alpha-2 country code du prospect
+          example: FR
+        title:
+          type: integer
+          nullable: true
+          description: Prospect title → see catalog contact_title
+        address:
+          type: string
+          nullable: true
+          description: Postal address du prospect
+        address_more:
+          type: string
+          nullable: true
+          description: Additional address details du prospect
+        zipcode:
+          type: string
+          nullable: true
+          description: Postal code du prospect
+        city:
+          type: string
+          nullable: true
+          description: Prospect city
+        referral:
+          type: string
+          nullable: true
+          description: Lead origin → see catalog origine
+        subreferral:
+          type: string
+          nullable: true
+          description: Lead sub-origin
+        recipient_lastname:
+          type: string
+          nullable: true
+          description: Recipient last name (for send to a friend function)
+        recipient_firstname:
+          type: string
+          nullable: true
+          description: Recipient first name (for send to a friend function)
+        recipient_email:
+          type: string
+          format: email
+          nullable: true
+          description: Recipient email (for send to a friend function)
+        property:
+          type: integer
+          nullable: true
+          description: ID of the property linked to the lead
+        property_reference:
+          type: string
+          nullable: true
+          description: Property reference
+        property_address:
+          type: string
+          nullable: true
+          description: Property address
+        property_address_more:
+          type: string
+          nullable: true
+          description: Additional address details du bien
+        property_zipcode:
+          type: string
+          nullable: true
+          description: Postal code du bien
+        property_city:
+          type: string
+          nullable: true
+          description: Property city
+        property_country:
+          type: string
+          nullable: true
+          description: Property country (ISO 3166-1 alpha-2)
+        property_category:
+          type: integer
+          nullable: true
+          description: Property category → see catalog property_category
+        property_types:
+          type: string
+          nullable: true
+          description: "Property types separated by comma (e.g. '1,2,3') → see catalog property_type"
+        property_subtype:
+          type: string
+          nullable: true
+          description: Property subtype → see catalog property_subtype
+        property_view_landscape:
+          type: integer
+          nullable: true
+          description: Property view landscape → see catalog property_view_landscape
+        property_view_type:
+          type: integer
+          nullable: true
+          description: View type → see catalog property_view_type
+        property_location:
+          type: integer
+          nullable: true
+          description: Property location → see catalog property_location
+        contact:
+          type: integer
+          nullable: true
+          description: ID of the contact linked to the lead
+        request:
+          type: integer
+          nullable: true
+          description: ID of the request linked to the lead
+        user:
+          type: integer
+          nullable: true
+          description: ID of the user linked to the lead
+        opened:
+          type: object
+          nullable: true
+          description: Lead opening date and user
+          properties:
+            date:
+              type: string
+              nullable: true
+              description: Opening date
+              example: '2014-11-11 21:54:30'
+            user:
+              type: string
+              nullable: true
+              description: ID of the user who opened the lead
+              example: '4358'
+        assigned:
+          type: object
+          nullable: true
+          description: Lead assignment date and user
+          properties:
+            date:
+              type: string
+              nullable: true
+              description: Assignment date
+            user:
+              type: string
+              nullable: true
+              description: ID of the assigned user
+        closed:
+          type: object
+          nullable: true
+          description: Lead closing date and user
+          properties:
+            date:
+              type: string
+              nullable: true
+              description: Closing date
+              example: '2014-11-13 09:07:07'
+            user:
+              type: string
+              nullable: true
+              description: ID of the user who closed the lead
+              example: '5661'
+        message:
+          type: string
+          nullable: true
+          description: Free text message from the prospect
+        area_min:
+          type: number
+          nullable: true
+          description: Minimum area criteria
+        area_max:
+          type: number
+          nullable: true
+          description: Maximum area criteria
+        area_unit:
+          type: integer
+          nullable: true
+          description: Area unit → see catalog unit_area
+        room_min:
+          type: integer
+          nullable: true
+          description: Minimum number of rooms
+        room_max:
+          type: integer
+          nullable: true
+          description: Maximum number of rooms
+        bedroom_min:
+          type: integer
+          nullable: true
+          description: Number of bedrooms minimum
+        bedroom_max:
+          type: integer
+          nullable: true
+          description: Number of bedrooms maximum
+        price_min:
+          type: number
+          nullable: true
+          description: Minimum price criteria
+        price_max:
+          type: number
+          nullable: true
+          description: Maximum price criteria
+        currency:
+          type: string
+          nullable: true
+          description: Currency ISO 4217 du prospect
+          example: EUR
+        criteria:
+          type: object
+          nullable: true
+          description: Prospect search criteria
+          properties:
+            category:
+              type: integer
+              nullable: true
+            area:
+              type: object
+              properties:
+                min: {type: number, nullable: true}
+                max: {type: number, nullable: true}
+            room:
+              type: object
+              properties:
+                min: {type: integer, nullable: true}
+                max: {type: integer, nullable: true}
+            price:
+              type: object
+              properties:
+                min: {type: number, nullable: true}
+                max: {type: number, nullable: true}
+                currency: {type: string, nullable: true}
+            cities:
+              type: array
+              items: {type: object}
+            locations:
+              type: array
+              items: {type: object}
+            types:
+              type: array
+              items: {type: integer}
+            subtype:
+              type: integer
+              nullable: true
+        created_at:
+          type: string
+          format: date-time
+          description: Creation date
+          example: '2014-11-11T11:22:46Z'
+        updated_at:
+          type: string
+          format: date-time
+          description: Last update date
+          example: '2014-12-03T15:08:15Z'
+
+    # ─────────────────────────────────────────
+    # SCHÉMA REQUEST (demande de recherche)
+    # Source : doc officielle + réponse réelle API
+    # Note : les IDs sont retournés en string par l'API
+    # ─────────────────────────────────────────
+    Request:
+      type: object
+      required: [contact, user, category, country]
+      description: Contact search request
+      properties:
+        id:
+          type: integer
+          description: Unique ID of the request
+          example: 156488
+        active:
+          type: boolean
+          description: Whether the request is active
+          example: false
+        contact:
+          type: string
+          description: 'Associated contact ID (returned as string by the API). **Required on creation (POST)**'
+          example: '220351'
+        user:
+          type: string
+          description: 'Responsible negotiator ID (returned as string by the API). **Required on creation (POST)**'
+          example: '3896'
+        ranking:
+          type: integer
+          nullable: true
+          description: Request rating
+        last_action:
+          type: string
+          format: date-time
+          nullable: true
+          description: Date of the last action
+        auto:
+          type: boolean
+          description: Whether matching is automatic
+          example: true
+        validated:
+          type: boolean
+          description: Whether the system validated the automatic matching
+          example: false
+        emailing:
+          type: object
+          description: Request emailing settings
+          properties:
+            subscription:
+              type: string
+              description: Emailing subscription → see catalog subscription
+              example: '1'
+            last_at:
+              type: string
+              format: date-time
+              nullable: true
+              description: Date of the last emailing
+        category:
+          type: string
+          description: "Searched property category → see catalog property_category (e.g. '1'=Sale, '2'=Rental). **Required on creation (POST)**"
+          example: '1'
+        subcategory:
+          type: string
+          nullable: true
+          description: Subcategory → see catalog property_subcategory
+        types:
+          type: array
+          description: Searched property types → see catalog property_type
+          items:
+            type: string
+          example: ['1', '2']
+        subtype:
+          type: string
+          nullable: true
+          description: Subtype → see catalog property_subtype
+        referral:
+          type: string
+          nullable: true
+          description: Search origin → see catalog origine
+        subreferral:
+          type: string
+          nullable: true
+          description: Search sub-origin
+        country:
+          type: string
+          description: 'ISO 3166-1 alpha-2 country code. **Required on creation (POST)**'
+          example: FR
+        locations:
+          type: array
+          description: Geographic search areas
+          items:
+            type: object
+            properties:
+              region:
+                type: object
+                nullable: true
+                description: Region
+              city:
+                type: object
+                nullable: true
+                description: City
+                properties:
+                  id:
+                    type: string
+                    example: '2039'
+                  name:
+                    type: string
+                    example: Antibes
+              district:
+                type: object
+                nullable: true
+                description: District
+        coordinates:
+          type: object
+          nullable: true
+          description: GPS coordinates of the search area
+        sector:
+          type: string
+          nullable: true
+          description: Agency customized sector
+        zone:
+          type: string
+          nullable: true
+          description: Search area
+        rooms_operator:
+          type: string
+          description: "Rooms operator: '1'=equal, '2'=greater or equal, '3'=less or equal"
+          enum: ['1', '2', '3']
+          example: '2'
+        rooms:
+          type: integer
+          nullable: true
+          description: Minimum number of rooms
+        bedrooms:
+          type: integer
+          nullable: true
+          description: Number of bedrooms minimum
+          example: 0
+        standing:
+          type: integer
+          nullable: true
+          description: Standing → see catalog property_standing
+        view:
+          type: object
+          nullable: true
+          description: Searched view
+          properties:
+            type:
+              type: integer
+              nullable: true
+              description: View type → see catalog property_view_type
+            landscape:
+              type: integer
+              nullable: true
+              description: Landscape type → see catalog property_view_landscape
+        condition:
+          type: integer
+          nullable: true
+          description: Property condition → see catalog property_condition
+        availability:
+          type: integer
+          nullable: true
+          description: Availability → see catalog property_availability
+        margin:
+          type: string
+          description: 'Matching margin in %'
+          example: '10'
+        area:
+          type: object
+          description: Searched area range
+          properties:
+            min:
+              type: string
+              nullable: true
+              description: Minimum area
+              example: '100'
+            max:
+              type: string
+              nullable: true
+              description: Maximum area
+            unit:
+              type: string
+              description: Area unit → see catalog unit_area
+              example: '1'
+        price:
+          type: object
+          description: Searched price range
+          properties:
+            min:
+              type: string
+              nullable: true
+              description: Minimum price
+            max:
+              type: string
+              nullable: true
+              description: Maximum price
+              example: '400000'
+            currency:
+              type: string
+              description: Currency ISO 4217
+              example: EUR
+        floor:
+          type: object
+          description: Searched floor
+          properties:
+            operator:
+              type: string
+              description: "Operator: '1'=equal, '2'=greater or equal, '3'=less or equal"
+              enum: ['1', '2', '3']
+              example: '1'
+            type:
+              type: integer
+              nullable: true
+              description: Floor type → see catalog property_floor
+            value:
+              type: integer
+              nullable: true
+              description: 'Floor number (0=ground, 1=first...)'
+        areas:
+          type: array
+          description: Searched room and area details
+          items:
+            type: object
+            properties:
+              type:
+                type: integer
+                description: Room type → see catalog property_areas
+                example: 18
+              number:
+                type: integer
+                description: Number of rooms
+                example: 1
+              area_min:
+                type: number
+                nullable: true
+                description: Minimum room area
+        proximities:
+          type: array
+          description: Desired proximities → see catalog property_proximity
+          items: {type: integer}
+        services:
+          type: array
+          description: Desired services → see catalog property_service
+          items: {type: integer}
+        activities:
+          type: array
+          description: Desired activities → see catalog property_activity
+          items: {type: integer}
+        tags:
+          type: array
+          description: Tags → see catalog tags
+          items: {type: integer}
+        tags_customized:
+          type: array
+          description: Agency customized tags
+          items:
+            type: object
+            properties:
+              comment: {type: string}
+        comment:
+          type: string
+          description: Free comment
+          example: ''
+        free_criteria:
+          type: string
+          description: Additional free criteria
+          example: ''
+        created_at:
+          type: string
+          format: date-time
+          description: "Creation date. Format returned by the API: 'YYYY-MM-DD HH:MM:SS'"
+          example: '2010-10-08T15:12:02Z'
+        created_by:
+          type: string
+          description: Creator user ID
+          example: '3896'
+        updated_at:
+          type: string
+          format: date-time
+          description: "Last update date. Format returned by the API: 'YYYY-MM-DD HH:MM:SS'"
+          example: '2014-04-10T09:37:18Z'
+        updated_by:
+          type: string
+          description: Last modifier user ID
+          example: '3896'
+
+security:
+  - basicAuth: []
+
+paths:
+
+  # ─────────────────────────────────────────
+  # CATALOGS
+  # ─────────────────────────────────────────
+  /catalogs:
+    get:
+      tags: [Catalogs]
+      operationId: listCatalogs
+      summary: Get a list of catalogs
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/CatalogList'}
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /catalogs/{catalog_id}:
+    get:
+      tags: [Catalogs]
+      operationId: getCatalog
+      summary: Get a specific catalog
+      parameters:
+        - name: catalog_id
+          in: path
+          required: true
+          schema: {type: string}
+          description: 'Catalog name (e.g. property_type, property_category...)'
+        - name: culture
+          in: query
+          schema: {type: string, example: fr}
+          description: Label language (ISO 639-1)
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/CatalogEntry'}
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  # ─────────────────────────────────────────
+  # AGENCIES
+  # ─────────────────────────────────────────
+  /agencies:
+    get:
+      tags: [Agencies]
+      operationId: listAgencies
+      summary: Retrieve the business units list
+      description: |
+        Returns the paginated list of agencies.
+
+        **Classic pagination:**
+        Use `limit` and `offset` to paginate through results.
+        The `total_items` field in the response indicates the total number of agencies.
+        If greater than `offset + limit`, there are more pages to fetch.
+
+        Example to paginate through 2500 agencies with limit=1000:
+        - Page 1 : `?limit=1000&offset=0`
+        - Page 2 : `?limit=1000&offset=1000`
+        - Page 3 : `?limit=1000&offset=2000`
+      parameters:
+        - name: limit
+          in: query
+          schema: {type: integer, default: 1000, maximum: 1000}
+          description: 'Number of records to return (max: 1000)'
+        - name: offset
+          in: query
+          schema: {type: integer, default: 0}
+          description: Number of records to skip
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PaginatedResponse'
+                  - type: object
+                    properties:
+                      agencies:
+                        type: array
+                        items: {$ref: '#/components/schemas/Agency'}
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  # ─────────────────────────────────────────
+  # PROPERTIES
+  # ─────────────────────────────────────────
+  /agencies/{agency_id}/properties:
+    get:
+      tags: [Properties]
+      operationId: listProperties
+      summary: Retrieve the properties list
+      description: |
+        Retourne la liste paginée des biens d'une agence.
+
+        **Classic pagination:**
+        Use `limit` and `offset` to paginate through results.
+        The `total_items` field in the response indicates the total number of properties.
+        If greater than `offset + limit`, there are more pages to fetch.
+
+        Example to paginate through 2500 properties with limit=1000:
+        - Page 1 : `?limit=1000&offset=0`
+        - Page 2 : `?limit=1000&offset=1000`
+        - Page 3 : `?limit=1000&offset=2000`
+
+        **Incremental synchronization (recommended):**
+        Pass the `timestamp` field returned by the last response to
+        only retrieve properties created or updated since that date.
+        Ideal for keeping a local database in sync without reloading everything.
+
+        Example: `?timestamp=1712000000`
+      parameters:
+        - name: agency_id
+          in: path
+          required: true
+          schema: {type: integer}
+          description: Unique ID of the agency
+        - name: limit
+          in: query
+          schema: {type: integer, default: 1000, maximum: 1000}
+          description: 'Number of records to return (max: 1000)'
+        - name: offset
+          in: query
+          schema: {type: integer, default: 0}
+          description: Number of records to skip
+        - name: timestamp
+          in: query
+          schema: {type: integer}
+          description: Returns properties created or updated since this UNIX timestamp
+        - name: step
+          in: query
+          schema: {type: integer}
+          description: Filter by step → see catalog property_step
+        - name: status
+          in: query
+          schema: {type: integer}
+          description: Filter by status → see catalog property_status
+        - name: group
+          in: query
+          schema: {type: integer}
+          description: Filter by group → see catalog property_group
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PaginatedResponse'
+                  - type: object
+                    properties:
+                      properties:
+                        type: array
+                        items: {$ref: '#/components/schemas/Property'}
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    post:
+      tags: [Properties]
+      operationId: createProperty
+      summary: Create a new property
+      parameters:
+        - name: agency_id
+          in: path
+          required: true
+          schema: {type: integer}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/PropertyInput'
+                - required: [reference, user]
+      responses:
+        '200':
+          description: Property created - returns ID and dates
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                    example: 19344239
+                  created_at:
+                    type: string
+                    format: date-time
+                    example: '2020-02-18T15:02:34Z'
+                  updated_at:
+                    type: string
+                    format: date-time
+                    example: '2020-02-18T15:52:26Z'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /agencies/{agency_id}/properties/{property_id}:
+    put:
+      tags: [Properties]
+      operationId: updateProperty
+      summary: Update a property
+      parameters:
+        - name: agency_id
+          in: path
+          required: true
+          schema: {type: integer}
+        - name: property_id
+          in: path
+          required: true
+          schema: {type: integer}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/PropertyInput'}
+      responses:
+        '200':
+          description: Property updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                    example: 19344239
+                  created_at:
+                    type: string
+                    format: date-time
+                  updated_at:
+                    type: string
+                    format: date-time
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  # ─────────────────────────────────────────
+  # PROPERTY - Provider
+  # ─────────────────────────────────────────
+  /agencies/{agency_id}/properties/{property_id}/provider:
+    put:
+      operationId: updatePropertyProvider
+      tags: [Property Provider]
+      summary: Update information related to the publishing of the property
+      description: Updates the publishing information of a property on a partner portal (URL and publication date).
+      parameters:
+        - name: agency_id
+          in: path
+          required: true
+          schema: {type: integer}
+          description: Unique ID of the agency
+        - name: property_id
+          in: path
+          required: true
+          schema: {type: integer}
+          description: Unique ID of the property
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                url:
+                  type: string
+                  format: uri
+                  description: URL of the property on the partner portal or website
+                  example: 'http://www.monportail.fr/bien/12345'
+                date:
+                  type: string
+                  format: date-time
+                  description: 'Publication date of the property (format YYYY-MM-DD HH:MM:SS)'
+                  example: '2024-10-10T10:45:24Z'
+      responses:
+        '200':
+          description: Publishing information updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  url:
+                    type: string
+                    example: 'http://...'
+                  date:
+                    type: string
+                    example: '2024-10-10T10:45:24Z'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  # ─────────────────────────────────────────
+  # PROPERTY - Providers (accès portails)
+  # ─────────────────────────────────────────
+  /agencies/{agency_id}/properties/{property_id}/providers:
+    get:
+      operationId: listPropertyProviders
+      tags: [Property Provider]
+      summary: Provider list for a specific property
+      description: Returns the list of partner portals that have access to this property.
+      parameters:
+        - name: agency_id
+          in: path
+          required: true
+          schema: {type: integer}
+        - name: property_id
+          in: path
+          required: true
+          schema: {type: integer}
+        - name: provider
+          in: query
+          required: false
+          schema: {type: integer}
+          description: Unique reference of the partner portal
+        - name: step
+          in: query
+          required: false
+          schema: {type: integer, default: 1, enum: [1, 2]}
+          description: '1 = active, 2 = inactive'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  provider:
+                    type: integer
+                    description: Partner portal ID
+                    example: 100
+                  step:
+                    type: integer
+                    description: '1 = active, 2 = inactive'
+                    example: 1
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    post:
+      operationId: grantPropertyProvider
+      tags: [Property Provider]
+      summary: Grant property access to a provider
+      description: Grants one or more partner portals access to publish this property.
+      parameters:
+        - name: agency_id
+          in: path
+          required: true
+          schema: {type: integer}
+        - name: property_id
+          in: path
+          required: true
+          schema: {type: integer}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                provider:
+                  type: integer
+                  description: Unique reference of the partner portal
+                  example: 100
+                step:
+                  type: integer
+                  description: '1 = active, 2 = inactive'
+                  default: 1
+                  enum: [1, 2]
+                  example: 1
+      responses:
+        '200':
+          description: Access granted - returns the updated providers list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  providers:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        provider:
+                          type: integer
+                          example: 100
+                        step:
+                          type: integer
+                          example: 1
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  # ─────────────────────────────────────────
+  # PROPERTY MEDIA - Photos
+  # ─────────────────────────────────────────
+  /agencies/{agency_id}/properties/{property_id}/pictures:
+    post:
+      tags: [Property Media]
+      operationId: uploadPropertyPicture
+      summary: Upload a picture for a property
+      parameters:
+        - name: agency_id
+          in: path
+          required: true
+          schema: {type: integer}
+        - name: property_id
+          in: path
+          required: true
+          schema: {type: integer}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [reference, content]
+              properties:
+                reference:
+                  type: string
+                  description: Your unique reference for the photo
+                  example: 69f36ec470396
+                content:
+                  type: string
+                  description: Photo content in base64
+                comments:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      language: {type: string, example: fr}
+                      comment: {type: string}
+      responses:
+        '200':
+          description: Photo uploaded
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id: {type: integer, example: 66321497}
+                  rank: {type: integer, example: 1}
+                  url: {type: string, format: uri}
+                  width_max: {type: integer, example: 1430}
+                  height_max: {type: integer, example: 710}
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /agencies/{agency_id}/properties/{property_id}/pictures/{picture_id}:
+    delete:
+      tags: [Property Media]
+      operationId: deletePropertyPicture
+      summary: Delete a picture from a property
+      parameters:
+        - name: agency_id
+          in: path
+          required: true
+          schema: {type: integer}
+        - name: property_id
+          in: path
+          required: true
+          schema: {type: integer}
+        - name: picture_id
+          in: path
+          required: true
+          schema: {type: integer}
+      responses:
+        '200':
+          description: Photo deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: {type: boolean, example: true}
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  # ─────────────────────────────────────────
+  # PROPERTY MEDIA - Vidéos / Visites virtuelles
+  # ─────────────────────────────────────────
+  /agencies/{agency_id}/properties/{property_id}/medias:
+    post:
+      tags: [Property Media]
+      operationId: addPropertyMedia
+      summary: Add or embed a media (virtual tour, video...)
+      parameters:
+        - name: agency_id
+          in: path
+          required: true
+          schema: {type: integer}
+        - name: property_id
+          in: path
+          required: true
+          schema: {type: integer}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [type, content]
+              properties:
+                reference:
+                  type: string
+                  description: Your unique reference
+                type:
+                  type: integer
+                  description: 'Media type: 1=Dailymotion, 2=Youtube, 9=HTML, 12=Matterport, 15=Vimeo, 19=Clap.video'
+                  enum: [1, 2, 9, 12, 15, 19]
+                  example: 2
+                content:
+                  type: string
+                  description: HTML content or HTTP link of the media
+                  example: 'https://youtu.be/JGowo0ARgPo'
+      responses:
+        '200':
+          description: Media added
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id: {type: integer, example: 123456}
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /agencies/{agency_id}/properties/{property_id}/medias/{media_id}:
+    delete:
+      tags: [Property Media]
+      operationId: deletePropertyMedia
+      summary: Delete a media from a property
+      parameters:
+        - name: agency_id
+          in: path
+          required: true
+          schema: {type: integer}
+        - name: property_id
+          in: path
+          required: true
+          schema: {type: integer}
+        - name: media_id
+          in: path
+          required: true
+          schema: {type: integer}
+      responses:
+        '200':
+          description: Media deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: {type: boolean, example: true}
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  # ─────────────────────────────────────────
+  # PROPERTY MEDIA - Documents
+  # ─────────────────────────────────────────
+  /agencies/{agency_id}/properties/{property_id}/documents:
+    post:
+      tags: [Property Media]
+      operationId: addPropertyDocument
+      summary: Add a document to a property
+      parameters:
+        - name: agency_id
+          in: path
+          required: true
+          schema: {type: integer}
+        - name: property_id
+          in: path
+          required: true
+          schema: {type: integer}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, content]
+              properties:
+                name:
+                  type: string
+                  description: File name
+                  example: diagnostics.pdf
+                type_id:
+                  type: integer
+                  description: Document type → see catalog document_type
+                content:
+                  type: string
+                  description: Document content in base64
+      responses:
+        '200':
+          description: Document added
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id: {type: integer, example: 5480610}
+                  name: {type: string, example: Document.pdf}
+                  download_url: {type: string, format: uri}
+                  url: {type: string, format: uri}
+                  filesize: {type: string, example: '1000'}
+                  type_id: {type: integer, example: 1}
+                  internet: {type: boolean}
+                  extranet: {type: boolean}
+                  private: {type: boolean}
+                  created_at: {type: string, format: date-time}
+                  updated_at: {type: string, format: date-time}
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /agencies/{agency_id}/properties/{property_id}/documents/{document_id}:
+    delete:
+      tags: [Property Media]
+      operationId: deletePropertyDocument
+      summary: Delete a document from a property
+      parameters:
+        - name: agency_id
+          in: path
+          required: true
+          schema: {type: integer}
+        - name: property_id
+          in: path
+          required: true
+          schema: {type: integer}
+        - name: document_id
+          in: path
+          required: true
+          schema: {type: integer}
+      responses:
+        '200':
+          description: Document deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: {type: boolean, example: true}
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  # ─────────────────────────────────────────
+  # PROPERTY MEDIA - Commentaires / Descriptions
+  # ─────────────────────────────────────────
+  /agencies/{agency_id}/properties/{property_id}/comments:
+    post:
+      tags: [Property Media]
+      operationId: upsertPropertyComment
+      summary: Add or update a multilingual description
+      parameters:
+        - name: agency_id
+          in: path
+          required: true
+          schema: {type: integer}
+        - name: property_id
+          in: path
+          required: true
+          schema: {type: integer}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [language]
+              properties:
+                language:
+                  type: string
+                  description: ISO 639-1 language code
+                  example: fr
+                title:
+                  type: string
+                  example: Bel appartement centre-ville
+                subtitle:
+                  type: string
+                  nullable: true
+                hook:
+                  type: string
+                  nullable: true
+                comment:
+                  type: string
+                  description: Full description
+      responses:
+        '200':
+          description: Comment added/updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id: {type: integer, example: 123456}
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  # ─────────────────────────────────────────
+  # PROPERTY - Crossings (rapprochements)
+  # ─────────────────────────────────────────
+  /agencies/{agency_id}/properties/{property_id}/crossings:
+    get:
+      tags: [Properties]
+      operationId: listPropertyCrossings
+      summary: Get matched requests (crossings) for a property
+      description: |
+        Returns the paginated list of crossings (requests matching this property).
+
+        **Synchronisation incrémentale :**
+        Pass the `timestamp` field returned by the last response to
+        only retrieve crossings updated since that date.
+      parameters:
+        - name: agency_id
+          in: path
+          required: true
+          schema: {type: integer}
+        - name: property_id
+          in: path
+          required: true
+          schema: {type: integer}
+        - name: limit
+          in: query
+          schema: {type: integer, default: 10000, maximum: 10000}
+        - name: offset
+          in: query
+          schema: {type: integer, default: 0}
+        - name: timestamp
+          in: query
+          schema: {type: integer}
+        - name: step
+          in: query
+          schema: {type: integer}
+          description: Filter by crossing step
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PaginatedResponse'
+                  - type: object
+                    properties:
+                      crossings:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            request_id:
+                              type: integer
+                              description: ID of the matched request
+                              example: 1234567
+                            step_id:
+                              type: integer
+                              description: '1=To suggest, 2=Already suggested, 3=Not suggested'
+                              enum: [1, 2, 3]
+                              example: 1
+                            total:
+                              type: string
+                              description: Matching score from 0 to 100
+                              example: '100'
+                            created_at:
+                              type: string
+                              format: date-time
+                            updated_at:
+                              type: string
+                              format: date-time
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  # ─────────────────────────────────────────
+  # CONTACTS
+  # ─────────────────────────────────────────
+  /agencies/{agency_id}/contacts:
+    get:
+      tags: [Contacts]
+      operationId: listContacts
+      summary: Retrieve the contacts list
+      description: |
+        Returns the paginated list of contacts for an agency.
+
+        **Classic pagination:**
+        Use `limit` and `offset` to paginate through results.
+        The `total_items` field indicates the total number of contacts.
+
+        **Incremental synchronization (recommended):**
+        Pass the `timestamp` field returned by the last response to
+        only retrieve contacts created or updated since that date.
+      parameters:
+        - name: agency_id
+          in: path
+          required: true
+          schema: {type: integer}
+        - name: limit
+          in: query
+          schema: {type: integer, default: 10000, maximum: 10000}
+        - name: offset
+          in: query
+          schema: {type: integer, default: 0}
+        - name: timestamp
+          in: query
+          schema: {type: integer}
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PaginatedResponse'
+                  - type: object
+                    properties:
+                      contacts:
+                        type: array
+                        items: {$ref: '#/components/schemas/Contact'}
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    post:
+      tags: [Contacts]
+      operationId: createContact
+      summary: Create a new contact
+      parameters:
+        - name: agency_id
+          in: path
+          required: true
+          schema: {type: integer}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/Contact'}
+      responses:
+        '200':
+          description: Contact created - returns ID only
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    description: ID of the created contact (returned as string by the API)
+                    example: '3021944'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /agencies/{agency_id}/contacts/{contact_id}:
+    put:
+      tags: [Contacts]
+      operationId: updateContact
+      summary: Update a contact
+      description: Updates an existing contact (individual or professional).
+      parameters:
+        - name: agency_id
+          in: path
+          required: true
+          schema: {type: integer}
+          description: Unique ID of the agency
+        - name: contact_id
+          in: path
+          required: true
+          schema: {type: integer}
+          description: Unique ID of the contact to update
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/Contact'}
+      responses:
+        '200':
+          description: Contact updated - returns ID only
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    description: ID of the updated contact (returned as string by the API)
+                    example: '3021944'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  # ─────────────────────────────────────────
+  # CONTACTS - Historique des actions
+  # ─────────────────────────────────────────
+  /agencies/{agency_id}/contacts/{contact_id}/actions:
+    get:
+      tags: [Contacts]
+      operationId: getContactActions
+      summary: Retrieve contact actions history
+      description: Returns the complete action history for a given contact.
+      parameters:
+        - name: agency_id
+          in: path
+          required: true
+          schema: {type: integer}
+          description: Unique ID of the agency
+        - name: contact_id
+          in: path
+          required: true
+          schema: {type: integer}
+          description: Identifiant unique du contact
+        - name: user_id
+          in: query
+          required: false
+          schema: {type: integer}
+          description: Filter actions by user
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Contact action history
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /agencies/{agency_id}/contacts/{contact_id}/actions/{year}:
+    get:
+      tags: [Contacts]
+      operationId: getContactActionsByYear
+      summary: Retrieve contact actions history filtered by year
+      description: 'Returns the action history for a contact, filtered by year.'
+      parameters:
+        - name: agency_id
+          in: path
+          required: true
+          schema: {type: integer}
+          description: Unique ID of the agency
+        - name: contact_id
+          in: path
+          required: true
+          schema: {type: integer}
+          description: Identifiant unique du contact
+        - name: year
+          in: path
+          required: true
+          schema: {type: integer, example: 2025}
+          description: Filter year (e.g. 2025)
+        - name: user_id
+          in: query
+          required: false
+          schema: {type: integer}
+          description: Filter actions by user
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Contact action history for the given year
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  # ─────────────────────────────────────────
+  # LEADS
+  # ─────────────────────────────────────────
+  /agencies/{agency_id}/leads:
+    get:
+      tags: [Leads]
+      operationId: listLeads
+      summary: Retrieve the leads list
+      description: |
+        Returns the paginated list of leads for an agency.
+
+        **Classic pagination:**
+        Use `limit` and `offset` to paginate through results.
+        The `total_items` field indicates the total number of leads.
+
+        **Incremental synchronization (recommended):**
+        Pass the `timestamp` field returned by the last response to
+        only retrieve leads created or updated since that date.
+      parameters:
+        - name: agency_id
+          in: path
+          required: true
+          schema: {type: integer}
+        - name: limit
+          in: query
+          schema: {type: integer, default: 10000, maximum: 10000}
+        - name: offset
+          in: query
+          schema: {type: integer, default: 0}
+        - name: timestamp
+          in: query
+          schema: {type: integer}
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PaginatedResponse'
+                  - type: object
+                    properties:
+                      leads:
+                        type: array
+                        items: {$ref: '#/components/schemas/Lead'}
+                    example:
+                      total_items: 1
+                      timestamp: 1417615695
+                      leads:
+                        - id: 123456
+                          parent: null
+                          provider: '4'
+                          agency: '101'
+                          type: '1'
+                          step: '4'
+                          date: '2014-12-03 15:08:15'
+                          start_at: null
+                          end_at: null
+                          reference: 194D1DDEDdE
+                          lastname: DUPONT
+                          firstname: Jean
+                          email: user@example.com
+                          phone: null
+                          mobile: null
+                          method: null
+                          language: fr
+                          country: FR
+                          referral: null
+                          subreferral: null
+                          property: null
+                          property_address: null
+                          property_address_more: null
+                          property_zipcode: null
+                          property_city: null
+                          property_country: null
+                          property_view_landscape: null
+                          property_view_type: null
+                          contact: null
+                          request: null
+                          user: null
+                          opened:
+                            date: '2014-11-11 21:54:30'
+                            user: '4358'
+                          assigned:
+                            date: null
+                            user: null
+                          closed:
+                            date: '2014-11-13 09:07:07'
+                            user: '5661'
+                          message: ''
+                          criteria:
+                            category: null
+                            area:
+                              min: null
+                              max: null
+                            room:
+                              min: null
+                              max: null
+                            price:
+                              min: null
+                              max: null
+                              currency: null
+                            cities: []
+                            locations: []
+                            types: []
+                            subtype: null
+                          created_at: '2014-11-11T11:22:46Z'
+                          updated_at: '2014-12-03T15:08:15Z'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    post:
+      tags: [Leads]
+      operationId: createLead
+      summary: Create a new lead
+      parameters:
+        - name: agency_id
+          in: path
+          required: true
+          schema: {type: integer}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/Lead'}
+      responses:
+        '200':
+          description: Lead created - returns ID and dates
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                    description: ID of the created lead
+                    example: 188699
+                  created_at:
+                    type: string
+                    format: date-time
+                    description: Creation date
+                    example: '2016-04-29T16:17:23Z'
+                  updated_at:
+                    type: string
+                    format: date-time
+                    description: Last update date
+                    example: '2016-04-29T16:17:23Z'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /agencies/{agency_id}/leads/{lead_id}:
+    put:
+      tags: [Leads]
+      operationId: updateLead
+      summary: Update a lead
+      description: Updates an existing lead (prospect from a portal or form).
+      parameters:
+        - name: agency_id
+          in: path
+          required: true
+          schema: {type: integer}
+          description: Unique ID of the agency
+        - name: lead_id
+          in: path
+          required: true
+          schema: {type: integer}
+          description: Unique ID of the lead to update
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/Lead'}
+      responses:
+        '200':
+          description: Lead updated - returns ID and dates
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                    description: ID of the updated lead
+                    example: 188699
+                  created_at:
+                    type: string
+                    format: date-time
+                    description: Creation date
+                    example: '2016-04-29T16:17:23Z'
+                  updated_at:
+                    type: string
+                    format: date-time
+                    description: Last update date
+                    example: '2016-04-29T16:17:23Z'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  # ─────────────────────────────────────────
+  # REQUESTS
+  # ─────────────────────────────────────────
+  /agencies/{agency_id}/requests:
+    get:
+      tags: [Requests]
+      operationId: listRequests
+      summary: Retrieve the requests list
+      description: |
+        Returns the paginated list of search requests for an agency.
+
+        **Classic pagination:**
+        Use `limit` and `offset` to paginate through results.
+        The `total_items` field indicates the total number of requests.
+
+        **Incremental synchronization (recommended):**
+        Pass the `timestamp` field returned by the last response to
+        only retrieve requests created or updated since that date.
+      parameters:
+        - name: agency_id
+          in: path
+          required: true
+          schema: {type: integer}
+          description: Unique ID of the agency
+        - name: limit
+          in: query
+          schema: {type: integer, default: 10000, maximum: 10000}
+          description: 'Number of records to return (max: 10000)'
+        - name: offset
+          in: query
+          schema: {type: integer, default: 0}
+          description: Number of records to skip
+        - name: timestamp
+          in: query
+          schema: {type: integer}
+          description: Returns requests created or updated since this UNIX timestamp
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PaginatedResponse'
+                  - type: object
+                    properties:
+                      requests:
+                        type: array
+                        items: {$ref: '#/components/schemas/Request'}
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    post:
+      tags: [Requests]
+      operationId: createRequest
+      summary: Create a new request
+      parameters:
+        - name: agency_id
+          in: path
+          required: true
+          schema: {type: integer}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/Request'}
+      responses:
+        '200':
+          description: Request created - returns ID only
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                    description: ID of the created request
+                    example: 156488
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /agencies/{agency_id}/requests/{request_id}:
+    put:
+      tags: [Requests]
+      operationId: updateRequest
+      summary: Update a request
+      parameters:
+        - name: agency_id
+          in: path
+          required: true
+          schema: {type: integer}
+          description: Unique ID of the agency
+        - name: request_id
+          in: path
+          required: true
+          schema: {type: integer}
+          description: Unique ID of the request
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/Request'}
+      responses:
+        '200':
+          description: Request updated - returns ID and dates
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                    description: ID of the updated request
+                    example: 1004656
+                  created_at:
+                    type: string
+                    format: date-time
+                    example: '2020-06-02T08:40:13Z'
+                  updated_at:
+                    type: string
+                    format: date-time
+                    example: '2020-06-02T08:40:13Z'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  # ─────────────────────────────────────────
+  # ACTIONS
+  # ─────────────────────────────────────────
+  /agencies/{agency_id}/actions:
+    post:
+      tags: [Actions]
+      operationId: createAction
+      summary: Create a new action
+      description: 'Creates a new action (call, visit, email...) linked to a contact and/or properties.'
+      parameters:
+        - name: agency_id
+          in: path
+          required: true
+          schema: {type: integer}
+          description: Unique ID of the agency
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [user, type, date]
+              properties:
+                user:
+                  type: integer
+                  description: 'ID of the responsible user. **Required on creation (POST)**'
+                  example: 3896
+                type:
+                  type: integer
+                  description: 'Action type → see catalog action_type. **Required on creation (POST)**'
+                  nullable: true
+                method:
+                  type: integer
+                  description: Action method → see catalog action_method
+                  nullable: true
+                date:
+                  type: string
+                  format: date
+                  description: 'Action date (format YYYY-MM-DD). **Required on creation (POST)**'
+                  example: 2024-06-15
+                start_at:
+                  type: string
+                  description: 'Start time (format HH:MM)'
+                  example: '09:00'
+                  nullable: true
+                end_at:
+                  type: string
+                  description: 'End time (format HH:MM)'
+                  example: '10:00'
+                  nullable: true
+                contact:
+                  type: integer
+                  description: ID of the contact associated with the action
+                  nullable: true
+                  example: 220351
+                properties:
+                  type: array
+                  description: List of property IDs associated with the action
+                  items:
+                    type: integer
+                  example: [181297, 181298]
+                subject:
+                  type: string
+                  description: Action subject
+                  nullable: true
+                  example: Visite appartement centre-ville
+                content:
+                  type: string
+                  description: Detailed content of the action
+                  nullable: true
+                  example: 'Le client est intéressé, souhaite une deuxième visite.'
+                referral:
+                  type: integer
+                  description: Action origin → see catalog origine
+                  nullable: true
+                subreferral:
+                  type: integer
+                  description: Action sub-origin
+                  nullable: true
+      responses:
+        '200':
+          description: Action created - returns ID only (as string)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    description: ID of the created action (returned as string by the API)
+                    example: '19344239'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /agencies/{agency_id}/actions/{action_id}:
+    put:
+      tags: [Actions]
+      operationId: updateAction
+      summary: Update an action
+      description: 'Updates an existing action (call, visit, email...) linked to a contact and/or properties.'
+      parameters:
+        - name: agency_id
+          in: path
+          required: true
+          schema: {type: integer}
+          description: Unique ID of the agency
+        - name: action_id
+          in: path
+          required: true
+          schema: {type: integer}
+          description: Unique ID of the action to update
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [user, type, date]
+              properties:
+                user:
+                  type: integer
+                  description: 'ID of the responsible user. **Required**'
+                  example: 3896
+                type:
+                  type: integer
+                  description: 'Action type → see catalog action_type. **Required**'
+                  nullable: true
+                method:
+                  type: integer
+                  description: Action method → see catalog action_method
+                  nullable: true
+                date:
+                  type: string
+                  format: date
+                  description: 'Action date (format YYYY-MM-DD). **Required**'
+                  example: 2024-06-15
+                start_at:
+                  type: string
+                  description: 'Start time (format HH:MM)'
+                  example: '09:00'
+                  nullable: true
+                end_at:
+                  type: string
+                  description: 'End time (format HH:MM)'
+                  example: '10:00'
+                  nullable: true
+                contact:
+                  type: integer
+                  description: ID of the contact associated with the action
+                  nullable: true
+                  example: 220351
+                properties:
+                  type: array
+                  description: List of property IDs associated with the action
+                  items:
+                    type: integer
+                  example: [181297, 181298]
+                subject:
+                  type: string
+                  description: Action subject
+                  nullable: true
+                  example: Visite appartement centre-ville
+                content:
+                  type: string
+                  description: Detailed content of the action
+                  nullable: true
+                  example: 'Le client est intéressé, souhaite une deuxième visite.'
+                referral:
+                  type: integer
+                  description: Action origin → see catalog origine
+                  nullable: true
+                subreferral:
+                  type: integer
+                  description: Action sub-origin
+                  nullable: true
+      responses:
+        '200':
+          description: Action updated - returns ID only (as string)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    description: ID of the updated action (returned as string by the API)
+                    example: '19344239'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  # ─────────────────────────────────────────
+  # CONTRACTS
+  # ─────────────────────────────────────────
+  /agencies/{agency_id}/contracts:
+    get:
+      tags: [Contracts]
+      operationId: listContracts
+      summary: Retrieve the contracts list
+      description: |
+        Returns the paginated list of contracts for an agency (mandates, sales, rentals...).
+
+        **Classic pagination:**
+        Use `limit` and `offset` to paginate through results.
+        The `total_items` field indicates the total number of contracts.
+
+        **Incremental synchronization (recommended):**
+        Pass the `timestamp` field returned by the last response to
+        only retrieve contracts created or updated since that date.
+      parameters:
+        - name: agency_id
+          in: path
+          required: true
+          schema: {type: integer}
+          description: Unique ID of the agency
+        - name: limit
+          in: query
+          schema: {type: integer, default: 10000, maximum: 10000}
+          description: 'Number of records to return (max: 10000)'
+        - name: offset
+          in: query
+          schema: {type: integer, default: 0}
+          description: Number of records to skip
+        - name: timestamp
+          in: query
+          schema: {type: integer}
+          description: Returns contracts created or updated since this UNIX timestamp
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PaginatedResponse'
+                  - type: object
+                    properties:
+                      contracts:
+                        type: array
+                        items:
+                          type: object
+                          description: Real estate contract
+                          properties:
+                            id:
+                              type: integer
+                              description: Unique ID of the contract
+                              example: 12345
+                            step:
+                              type: integer
+                              description: Contract step → see catalog contract_step
+                              example: 1
+                            agency:
+                              type: integer
+                              description: Agency ID
+                              example: 182
+                            property:
+                              type: integer
+                              description: Property ID
+                              example: 181297
+                            currency:
+                              type: string
+                              description: Default currency ISO 4217
+                              example: EUR
+                            price:
+                              type: number
+                              description: Final contract price
+                              example: 250000
+                            price_net:
+                              type: number
+                              nullable: true
+                              description: Net seller price (cash back to owner)
+                            commission:
+                              type: number
+                              nullable: true
+                              description: Total transaction commission
+                            commission_agency:
+                              type: number
+                              nullable: true
+                              description: Agency commission
+                            commission_owner:
+                              type: number
+                              nullable: true
+                              description: Commission for the owner
+                            commission_customer:
+                              type: number
+                              nullable: true
+                              description: Buyer commission
+                            vat:
+                              type: number
+                              nullable: true
+                              description: VAT amount
+                            vat_rate:
+                              type: number
+                              nullable: true
+                              description: 'VAT rate in %'
+                            deposit:
+                              type: number
+                              nullable: true
+                              description: Security deposit amount
+                            project_at:
+                              type: string
+                              format: date
+                              nullable: true
+                              description: Project date
+                            offer_at:
+                              type: string
+                              format: date
+                              nullable: true
+                              description: Offer date
+                            commitment_at:
+                              type: string
+                              format: date
+                              nullable: true
+                              description: Commitment / promise date
+                            condition_precedent_at:
+                              type: string
+                              format: date
+                              nullable: true
+                              description: Conditions precedent expiry date
+                            contract_scheduled_at:
+                              type: string
+                              format: date
+                              nullable: true
+                              description: Scheduled deed signing date
+                            contract_at:
+                              type: string
+                              format: date
+                              nullable: true
+                              description: Notarial deed signing date
+                            collected_at:
+                              type: string
+                              format: date
+                              nullable: true
+                              description: Funds collection date
+                            legal_notice_at:
+                              type: string
+                              format: date
+                              nullable: true
+                              description: Legal notice date
+                            contacts:
+                              type: array
+                              description: List of contacts linked to the contract
+                              items:
+                                type: object
+                            entries:
+                              type: array
+                              description: List of contract entries
+                              items:
+                                type: object
+                            comment:
+                              type: string
+                              nullable: true
+                              description: Free comment
+                            created_at:
+                              type: string
+                              format: date-time
+                              description: Creation date
+                            updated_at:
+                              type: string
+                              format: date-time
+                              description: Last update date
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  # ─────────────────────────────────────────
+  # RESIDENCES
+  # ─────────────────────────────────────────
+  /agencies/{agency_id}/residences:
+    get:
+      tags: [Residences]
+      operationId: listResidences
+      summary: Retrieve the residences list
+      description: |
+        Returns the paginated list of residences and buildings for an agency.
+
+        **Classic pagination:**
+        Use `limit` and `offset` to paginate through results.
+        The `total_items` field indicates the total number of residences.
+
+        **Incremental synchronization (recommended):**
+        Pass the `timestamp` field returned by the last response to
+        only retrieve residences created or updated since that date.
+
+        > ⚠️ **Note on types** : all numeric fields (id, floors, lots,
+        > longitude, latitude...) are returned as **string** by the real API.
+      parameters:
+        - name: agency_id
+          in: path
+          required: true
+          schema: {type: integer}
+          description: Unique ID of the agency
+        - name: limit
+          in: query
+          schema: {type: integer, default: 10000, maximum: 10000}
+          description: 'Number of records to return (max: 10000)'
+        - name: offset
+          in: query
+          schema: {type: integer, default: 0}
+          description: Number of records to skip
+        - name: timestamp
+          in: query
+          schema: {type: integer}
+          description: Returns residences created or updated since this UNIX timestamp
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PaginatedResponse'
+                  - type: object
+                    properties:
+                      residences:
+                        type: array
+                        items:
+                          type: object
+                          description: Residence or building
+                          properties:
+                            id:
+                              type: string
+                              description: Unique ID of the residence (returned as string)
+                              example: '35704'
+                            user:
+                              type: string
+                              description: Responsible user ID (returned as string)
+                              example: '8265'
+                            type:
+                              type: string
+                              description: Residence type → see catalog property_building
+                              example: '2'
+                            name:
+                              type: string
+                              description: Residence name
+                              example: LES GLYCINES
+                            reference:
+                              type: string
+                              nullable: true
+                              description: Residence reference
+                            location_reference:
+                              type: string
+                              nullable: true
+                              description: Location reference
+                            address:
+                              type: string
+                              description: Residence address
+                              example: '7, route des Francs Tireurs'
+                            address_more:
+                              type: string
+                              nullable: true
+                              description: Additional address details
+                            city:
+                              type: object
+                              properties:
+                                id:
+                                  type: string
+                                  description: City ID (returned as string)
+                                  example: '183085'
+                                name:
+                                  type: string
+                                  example: Aubonne
+                                zipcode:
+                                  type: string
+                                  example: '1170'
+                            district:
+                              type: object
+                              nullable: true
+                              properties:
+                                id:
+                                  type: string
+                                  example: '18'
+                                name:
+                                  type: string
+                                  example: Centre
+                            country:
+                              type: string
+                              description: ISO 3166-1 alpha-2 country code
+                              example: CH
+                            longitude:
+                              type: string
+                              description: GPS longitude (returned as string)
+                              example: '6.39172'
+                            latitude:
+                              type: string
+                              description: GPS latitude (returned as string)
+                              example: '46.49536'
+                            construction_year:
+                              type: string
+                              nullable: true
+                              description: Construction year
+                              example: '2006'
+                            standing:
+                              type: string
+                              nullable: true
+                              description: Standing → see catalog property_standing
+                              example: '4'
+                            floors:
+                              type: string
+                              nullable: true
+                              description: Number of floors in the building (returned as string)
+                              example: '4'
+                            lots:
+                              type: string
+                              nullable: true
+                              description: Number of lots (returned as string)
+                              example: '12'
+                            total_shares:
+                              type: string
+                              nullable: true
+                              description: Total shares
+                            code:
+                              type: string
+                              nullable: true
+                              description: Residence entry code
+                            code_at:
+                              type: string
+                              format: date-time
+                              nullable: true
+                              description: Date of the last entry code
+                            comment:
+                              type: string
+                              nullable: true
+                              description: Free comment
+                            contacts:
+                              type: array
+                              description: 'Contacts linked to the residence (co-owners, caretakers...)'
+                              items:
+                                type: object
+                                properties:
+                                  contact:
+                                    type: string
+                                    description: Contact ID
+                                    example: '4753321'
+                                  type:
+                                    type: string
+                                    description: Type of link with the residence
+                                    example: '3'
+                                  shares:
+                                    type: string
+                                    nullable: true
+                                    description: Contact shares
+                                    example: '34.00'
+                                  property:
+                                    type: object
+                                    nullable: true
+                                    description: Property associated with the contact in the residence
+                                    properties:
+                                      rooms:
+                                        type: string
+                                        example: '3'
+                                      bedrooms:
+                                        type: string
+                                        example: '2'
+                                      subtype:
+                                        type: string
+                                        example: '63'
+                                      area:
+                                        type: string
+                                        example: '300.00'
+                                      floor:
+                                        type: object
+                                        properties:
+                                          type:
+                                            type: integer
+                                            example: 23
+                                          value:
+                                            type: integer
+                                            nullable: true
+                                  comment:
+                                    type: string
+                                    nullable: true
+                                    description: Comment about the contact
+                                    example: test
+                            created_at:
+                              type: string
+                              format: date-time
+                              description: "Creation date. Format returned by API: 'YYYY-MM-DD HH:MM:SS'"
+                              example: '2015-11-17T14:13:44Z'
+                            updated_at:
+                              type: string
+                              format: date-time
+                              description: "Last update date. Format returned by API: 'YYYY-MM-DD HH:MM:SS'"
+                              example: '2017-04-07T11:12:06Z'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  # ─────────────────────────────────────────
+  # USERS
+  # ─────────────────────────────────────────
+  /agencies/{agency_id}/users:
+    get:
+      tags: [Users]
+      operationId: listUsers
+      summary: Retrieve the users list
+      parameters:
+        - name: agency_id
+          in: path
+          required: true
+          schema: {type: integer}
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PaginatedResponse'
+                  - type: object
+                    properties:
+                      users:
+                        type: array
+                        items: {$ref: '#/components/schemas/User'}
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  # ─────────────────────────────────────────
+  # USERS - Historique des actions
+  # ─────────────────────────────────────────
+  /agencies/{agency_id}/users/{user_id}/actions:
+    get:
+      tags: [Users]
+      operationId: getUserActions
+      summary: Retrieve actions list of a specific user
+      description: Returns the action history of a specific user/negotiator.
+      parameters:
+        - name: agency_id
+          in: path
+          required: true
+          schema: {type: integer}
+          description: Unique ID of the agency
+        - name: user_id
+          in: path
+          required: true
+          schema: {type: integer}
+          description: Unique ID of the user/agent
+        - name: limit
+          in: query
+          schema: {type: integer, default: 1000, maximum: 1000}
+          description: 'Number of records to return (max: 1000)'
+        - name: offset
+          in: query
+          schema: {type: integer, default: 0}
+          description: Number of records to skip
+        - name: type
+          in: query
+          schema: {type: integer}
+          description: Filter by action type → see catalog action_type
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PaginatedResponse'
+                  - type: object
+                    properties:
+                      actions:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            id:
+                              type: string
+                              description: Action ID (returned as string)
+                              example: '19344999'
+                            type:
+                              type: string
+                              description: "Type d'action → voir catalog action_type"
+                              example: '2'
+                            user:
+                              type: string
+                              description: 'User ID (should be equal to {user_id})'
+                              example: '1234'
+                            contact:
+                              type: string
+                              nullable: true
+                              description: Associated contact ID
+                              example: '8520201'
+                            date:
+                              type: string
+                              format: date
+                              description: "Date de l'action"
+                              example: 2018-09-11
+                            time_start:
+                              type: string
+                              nullable: true
+                              description: 'Start time (HH:MM:SS)'
+                              example: '14:43:20'
+                            time_end:
+                              type: string
+                              nullable: true
+                              description: 'End time (HH:MM:SS)'
+                              example: '15:43:00'
+                            subject:
+                              type: string
+                              nullable: true
+                              description: Action subject (can be the subject of an email)
+                              example: More details on a new property
+                            content:
+                              type: string
+                              nullable: true
+                              description: Action content (can be the body of an email)
+                              example: 'Hello, …'
+                            properties:
+                              type: object
+                              nullable: true
+                              description: Property/properties associated with the action
+                              properties:
+                                id:
+                                  type: string
+                                  example: '233030'
+                                report:
+                                  type: string
+                                  nullable: true
+                                price:
+                                  type: string
+                                  example: '2600000'
+                                currency:
+                                  type: string
+                                  example: EUR
+                                rating:
+                                  type: string
+                                  nullable: true
+                                assessment:
+                                  type: string
+                                  nullable: true
+                            referral:
+                              type: string
+                              nullable: true
+                              description: Action origin
+                            subreferral:
+                              type: string
+                              nullable: true
+                              description: Action sub-origin
+                            created_at:
+                              type: string
+                              format: date-time
+                              example: '2018-09-11T14:43:20Z'
+                            updated_at:
+                              type: string
+                              format: date-time
+                              example: '2018-09-11T14:43:20Z'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  # ─────────────────────────────────────────
+  # REQUESTS - Crossings par demande
+  # ─────────────────────────────────────────
+  /agencies/{agency_id}/requests/{request_id}/crossings:
+    get:
+      tags: [Requests]
+      operationId: listRequestCrossings
+      summary: Crossing list (matched properties) for a specific request
+      description: |
+        Returns the list of properties matching a given search request.
+        Symmetric of `GET /properties/{property_id}/crossings` which returns
+        the requests matching a property — here we start from a request to find properties.
+
+        **Synchronisation incrémentale :**
+        Pass the `timestamp` field returned by the last response to
+        only retrieve crossings updated since that date.
+      parameters:
+        - name: agency_id
+          in: path
+          required: true
+          schema: {type: integer}
+          description: Unique ID of the agency
+        - name: request_id
+          in: path
+          required: true
+          schema: {type: integer}
+          description: Unique ID of the request de recherche
+        - name: limit
+          in: query
+          schema: {type: integer, default: 10000, maximum: 10000}
+          description: 'Number of records to return (max: 10000)'
+        - name: offset
+          in: query
+          schema: {type: integer, default: 0}
+          description: Number of records to skip
+        - name: timestamp
+          in: query
+          schema: {type: integer}
+          description: Returns crossings updated since this UNIX timestamp
+        - name: step
+          in: query
+          schema: {type: integer}
+          description: 'Filtrer par step (1=To suggest, 2=Already suggested, 3=Not suggested)'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PaginatedResponse'
+                  - type: object
+                    properties:
+                      crossings:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            property_id:
+                              type: integer
+                              description: ID of the matched property
+                              example: 1234567
+                            step_id:
+                              type: integer
+                              description: '1=To suggest, 2=Already suggested, 3=Not suggested'
+                              enum: [1, 2, 3]
+                              example: 1
+                            total:
+                              type: string
+                              description: Matching score from 0 to 100
+                              example: '100'
+                            created_at:
+                              type: string
+                              format: date-time
+                              example: '2010-10-08T15:12:02Z'
+                            updated_at:
+                              type: string
+                              format: date-time
+                              example: '2014-04-10T09:37:18Z'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'

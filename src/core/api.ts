@@ -1,77 +1,59 @@
+import type { z } from 'zod'
+import type { ApimoRequestContext, RetryConfig } from '../api/mutator'
 import type { CatalogName } from '../consts/catalogs'
 import type { ApiCulture } from '../consts/languages'
-import type { CatalogDefinition, CatalogEntry, CatalogTransformer, LocalizedCatalogTransformer } from '../schemas/common'
+import type { GetCatalogParams, ListAgenciesParams, ListPropertiesParams } from '../generated/client/model'
+import type { CatalogEntry } from '../schemas/common'
 import type { ApiCacheAdapter, CatalogEntryName } from '../services/storage/types'
 import type { DeepPartial } from '../types'
 import type { ApiSearchParams } from '../utils/url'
 import Bottleneck from 'bottleneck'
 import { merge } from 'merge-anything'
-import { z } from 'zod'
+import { apimoRequestContext } from '../api/context'
+import { ApiConfigurationError, ApiResponseValidationError } from '../errors'
 import {
-  ApiConfigurationError,
-  ApiResponseValidationError,
-  ApiRetryExhaustedError,
-  isRetryable,
-  throwForStatus,
-} from '../errors'
-import { getAgencySchema } from '../schemas/agency'
-import { CatalogDefinitionSchema, CatalogEntrySchema } from '../schemas/common'
-import { getPropertySchema } from '../schemas/property'
+  getCatalog,
+  listAgencies,
+  listCatalogs,
+  listProperties,
+  listUsers,
+} from '../generated/client/apimo'
+import {
+  GetCatalogResponse,
+  ListAgenciesResponse,
+  ListCatalogsResponse,
+  ListPropertiesResponse,
+  ListUsersResponse,
+} from '../generated/zod/apimo.zod'
 import { DummyCache } from '../services/storage/dummy.cache'
 import { MemoryCache } from '../services/storage/memory.cache'
 import { CacheExpiredError } from '../services/storage/types'
-import { makeApiUrl } from '../utils/url'
 
 /**
  * ApiConfig
  * ---
  *
- * The general config, used to create an API wrapper. It exports major endpoints as methods.
- * Internally, it's a simple wrapper to node:fetch with a neater syntax.
+ * The general config used to create an `Apimo` client. The client wraps the
+ * orval-generated API client (see `src/generated`) and layers on the
+ * cross-cutting concerns the generated code is agnostic about: authentication,
+ * rate-limiting, retries and runtime response validation (via the generated Zod
+ * schemas).
  */
 export interface AdditionalConfig {
-  // Base path for API access. Defaults to "https://api.apimo.pro/".
+  /** Base URL for API access. Defaults to "https://api.apimo.pro". */
   baseUrl: string
-  // The default language to use when none is provided. Translates to "culture" in the API.
+  /** Default language used when none is provided. Translates to "culture" in the API. */
   culture: ApiCulture
-  // Catalog related configuration
+  /** Automatic retry configuration for transient failures (429, 5xx, network errors). */
+  retry: RetryConfig
+  /** Catalog caching configuration. */
   catalogs: {
-    // Caching of catalogs, for faster transformation
     cache: {
-      // Whether to use the catalog caching. A value of false means that catalogs won't be cached. You will need to supply your own `catalogs.transform.transformFn`.
+      /** Whether to cache catalog entries. `false` disables caching entirely. */
       active: boolean
-      // Where to store the catalogs cache. Currently only file is supported.
+      /** Where catalog entries are stored. */
       adapter: ApiCacheAdapter
     }
-    // Catalog transformation related configuration
-    transform: {
-      // Whether to use the catalog transformation. A value of false will apply an identity function to the catalog ids.
-      active: boolean
-      // If provided, the function that will replace the default catalog transformer function.
-      transformFn?: CatalogTransformer
-    }
-  }
-  // Automatic retry configuration for transient failures (429, 5xx, network errors).
-  retry: {
-    /**
-     * Maximum total number of attempts (1 = no retries, 2 = one retry, etc.).
-     * @default 3
-     */
-    attempts: number
-    /**
-     * Delay in milliseconds before the first retry.
-     * Subsequent delays are calculated according to the `backoff` strategy.
-     * @default 200
-     */
-    initialDelayMs: number
-    /**
-     * Back-off strategy applied between attempts.
-     * - `exponential` — delay doubles on every retry (200 → 400 → 800 …)
-     * - `linear`      — delay increases by `initialDelayMs` each time (200 → 400 → 600 …)
-     * - `fixed`       — the same delay is used for every retry
-     * @default 'exponential'
-     */
-    backoff: 'exponential' | 'linear' | 'fixed'
   }
 }
 
@@ -80,19 +62,16 @@ export const DEFAULT_BASE_URL = 'https://api.apimo.pro'
 export const DEFAULT_ADDITIONAL_CONFIG: AdditionalConfig = {
   baseUrl: DEFAULT_BASE_URL,
   culture: 'en',
+  retry: {
+    attempts: 3,
+    initialDelayMs: 200,
+    backoff: 'exponential',
+  },
   catalogs: {
     cache: {
       active: true,
       adapter: new MemoryCache(),
     },
-    transform: {
-      active: true,
-    },
-  },
-  retry: {
-    attempts: 3,
-    initialDelayMs: 200,
-    backoff: 'exponential',
   },
 }
 
@@ -100,12 +79,13 @@ export class Apimo {
   readonly config: AdditionalConfig
   readonly cache: ApiCacheAdapter
   readonly limiter: Bottleneck
+  private readonly authHeader: string
 
   constructor(
     // The site identifier, in a string of numbers format. You can request yours by contacting Apimo.net customer service.
-    private readonly provider: string,
+    provider: string,
     // The secret token for API authentication
-    private readonly token: string,
+    token: string,
     // Additional config, to tweak how the API is handled
     config: DeepPartial<AdditionalConfig> = DEFAULT_ADDITIONAL_CONFIG,
   ) {
@@ -129,6 +109,7 @@ export class Apimo {
       throw new ApiConfigurationError(`baseUrl "${this.config.baseUrl}" is not a valid URL.`)
     }
 
+    this.authHeader = `Basic ${btoa(`${provider}:${token}`)}`
     this.cache = this.config.catalogs.cache.active ? this.config.catalogs.cache.adapter : new DummyCache()
     this.limiter = new Bottleneck({
       reservoir: 10,
@@ -137,198 +118,120 @@ export class Apimo {
     })
   }
 
-  /**
-   * An override of fetch that adds the required Authorization header to every request.
-   */
-  public fetch(...parameters: Parameters<typeof fetch>): Promise<Response> {
-    const [input, init] = parameters
-    const extendedInit: RequestInit = {
-      ...init,
-      headers: {
-        Authorization: `Basic ${btoa(`${this.provider}:${this.token}`)}`,
-        ...init?.headers,
-      },
-    }
+  // ---------------------------------------------------------------------------
+  // Endpoints
+  // ---------------------------------------------------------------------------
 
-    return this.limiter.schedule(() => fetch(input, extendedInit))
+  /** Retrieve the list of available catalogs. */
+  public async fetchCatalogs() {
+    const response = await this.run(() => listCatalogs())
+    return this.parse(ListCatalogsResponse, response, '/catalogs')
   }
 
-  public async get<S extends z.Schema>(path: string[], schema: S, options?: Partial<ApiSearchParams>): Promise<z.infer<S>> {
-    const url = makeApiUrl(path, this.config, {
-      culture: this.config.culture,
-      ...options,
-    })
-
-    const { attempts, initialDelayMs, backoff } = this.config.retry
-    let lastError: unknown
-
-    for (let attempt = 1; attempt <= attempts; attempt++) {
-      try {
-        const response = await this.fetch(url)
-
-        if (!response.ok) {
-          let responseBody: unknown
-          try {
-            responseBody = await response.json()
-          }
-          catch {
-            // The body wasn't JSON — leave responseBody as undefined
-          }
-          throwForStatus(response.status, url.toString(), responseBody)
-        }
-
-        const json = await response.json()
-        const result = await schema.safeParseAsync(json)
-        if (!result.success) {
-          throw new ApiResponseValidationError(url.toString(), result.error)
-        }
-
-        return result.data
-      }
-      catch (error) {
-        lastError = error
-
-        const hasMoreAttempts = attempt < attempts
-        if (!isRetryable(error)) {
-          // Non-transient errors (4xx, schema failures, etc.) — propagate immediately
-          throw error
-        }
-        if (!hasMoreAttempts) {
-          break
-        }
-
-        await this.sleep(this.retryDelayMs(attempt, initialDelayMs, backoff))
-      }
-    }
-
-    throw new ApiRetryExhaustedError(attempts, lastError)
+  /** Retrieve the entries of a single catalog (e.g. `property_type`). */
+  public async fetchCatalog(catalogName: CatalogName, options?: Pick<ApiSearchParams, 'culture'>) {
+    const params: GetCatalogParams = { culture: options?.culture ?? this.config.culture }
+    const response = await this.run(() => getCatalog(catalogName, params))
+    return this.parse(GetCatalogResponse, response, `/catalogs/${catalogName}`)
   }
 
-  public async fetchCatalogs(): Promise<CatalogDefinition[]> {
-    return this.get(
-      ['catalogs'],
-      z.array(CatalogDefinitionSchema),
-    )
+  /** Retrieve the agencies (business units) reachable with the current credentials. */
+  public async fetchAgencies(params?: ListAgenciesParams) {
+    const response = await this.run(() => listAgencies(params))
+    return this.parse(ListAgenciesResponse, response, '/agencies')
   }
+
+  /** Retrieve the paginated list of properties for an agency. */
+  public async fetchProperties(agencyId: number, params?: ListPropertiesParams) {
+    const response = await this.run(() => listProperties(agencyId, params))
+    return this.parse(ListPropertiesResponse, response, `/agencies/${agencyId}/properties`)
+  }
+
+  /** Retrieve the users (negotiators) of an agency. */
+  public async fetchUsers(agencyId: number) {
+    const response = await this.run(() => listUsers(agencyId))
+    return this.parse(ListUsersResponse, response, `/agencies/${agencyId}/users`)
+  }
+
+  // ---------------------------------------------------------------------------
+  // Catalog cache helpers
+  // ---------------------------------------------------------------------------
 
   public async populateCache(catalogName: CatalogName, culture: ApiCulture): Promise<void>
-
   public async populateCache(catalogName: CatalogName, culture: ApiCulture, id: number): Promise<CatalogEntryName | null>
-
   public async populateCache(catalogName: CatalogName, culture: ApiCulture, id?: number): Promise<void | CatalogEntryName | null> {
-    const catalog = await this.fetchCatalog(
-      catalogName,
-      { culture },
-    )
-    await this.cache.setEntries(
-      catalogName,
-      culture,
-      catalog,
-    )
+    const catalog = await this.fetchCatalog(catalogName, { culture })
+    const entries: CatalogEntry[] = catalog
+      .filter((entry): entry is typeof entry & { id: number, name: string } => entry.id != null && entry.name != null)
+      .map(entry => ({
+        id: entry.id,
+        name: entry.name,
+        name_plurial: entry.name_plurial ?? undefined,
+        culture: entry.culture,
+      }))
+
+    await this.cache.setEntries(catalogName, culture, entries)
 
     if (id !== undefined) {
-      const queriedKey = catalog.find(({ id: entryId }) => entryId === id)
-      return queriedKey
-        ? {
-            name: queriedKey.name,
-            namePlural: queriedKey.name_plurial,
-          }
-        : null
+      const found = entries.find(entry => entry.id === id)
+      return found ? { name: found.name, namePlural: found.name_plurial } : null
     }
   }
 
+  /** Returns a catalog's entries, populating the cache from the API on a miss. */
   public async getCatalogEntries(catalogName: CatalogName, options?: Pick<ApiSearchParams, 'culture'>): Promise<CatalogEntry[]> {
+    const culture = options?.culture ?? this.config.culture
     try {
-      return await this.cache.getEntries(catalogName, options?.culture ?? this.config.culture)
+      return await this.cache.getEntries(catalogName, culture)
     }
     catch (e) {
       if (e instanceof CacheExpiredError) {
-        await this.populateCache(catalogName, options?.culture ?? this.config.culture)
-        return this.cache.getEntries(catalogName, options?.culture ?? this.config.culture)
+        await this.populateCache(catalogName, culture)
+        return this.cache.getEntries(catalogName, culture)
       }
-      else {
-        throw e
-      }
+      throw e
     }
   }
 
-  public async fetchCatalog(catalogName: CatalogName, options?: Pick<ApiSearchParams, 'culture'>): Promise<CatalogEntry[]> {
-    return this.get(
-      ['catalogs', catalogName],
-      z.array(CatalogEntrySchema),
-      options,
-    )
-  }
-
-  public async fetchAgencies(options?: Pick<ApiSearchParams, 'culture' | 'limit' | 'offset'>) {
-    return this.get(
-      ['agencies'],
-      z.object({
-        total_items: z.number(),
-        agencies: getAgencySchema(this.getLocalizedCatalogTransformer(
-          options?.culture ?? this.config.culture,
-        ), this.config).array(),
-        timestamp: z.number(),
-      },
-      ),
-    )
-  }
-
-  public async fetchProperties(agencyId: number, options?: Pick<ApiSearchParams, 'culture' | 'limit' | 'offset' | 'timestamp' | 'step' | 'status' | 'group'>) {
-    return this.get(
-      ['agencies', agencyId.toString(), 'properties'],
-      z.object({
-        total_items: z.number(),
-        timestamp: z.number(),
-        properties: getPropertySchema(this.getLocalizedCatalogTransformer(
-          options?.culture ?? this.config.culture,
-        )).array(),
-      }),
-      options,
-    )
-  }
-
-  /** Calculates the delay before the next retry attempt (1-based attempt index). */
-  private retryDelayMs(attempt: number, initialDelayMs: number, backoff: AdditionalConfig['retry']['backoff']): number {
-    switch (backoff) {
-      case 'exponential': return initialDelayMs * 2 ** (attempt - 1)
-      case 'linear': return initialDelayMs * attempt
-      case 'fixed': return initialDelayMs
-    }
-  }
-
-  private sleep(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms))
-  }
-
-  private getLocalizedCatalogTransformer(culture: ApiCulture): LocalizedCatalogTransformer {
-    return async (catalogName, id) => {
-      if (!this.config.catalogs.transform.active) {
-        return `${catalogName}.${id}`
-      }
-      if (this.config.catalogs.transform.transformFn) {
-        return this.config.catalogs.transform.transformFn(
-          catalogName,
-          culture,
-          id,
-        )
-      }
-
-      return this.catalogTransformer(catalogName, culture, id)
-    }
-  }
-
-  private async catalogTransformer(catalogName: CatalogName, culture: ApiCulture, id: number): Promise<CatalogEntryName | null> {
+  /** Resolves a single catalog entry id to its localized name, using the cache. */
+  public async getCatalogEntry(catalogName: CatalogName, id: number, options?: Pick<ApiSearchParams, 'culture'>): Promise<CatalogEntryName | null> {
+    const culture = options?.culture ?? this.config.culture
     try {
       return await this.cache.getEntry(catalogName, culture, id)
     }
     catch (e) {
       if (e instanceof CacheExpiredError) {
-        return await this.populateCache(catalogName, culture, id)
+        return this.populateCache(catalogName, culture, id)
       }
-      else {
-        throw e
-      }
+      throw e
     }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Internals
+  // ---------------------------------------------------------------------------
+
+  /** Per-instance context handed to the generated client's custom mutator. */
+  private get requestContext(): ApimoRequestContext {
+    return {
+      baseUrl: this.config.baseUrl,
+      authHeader: this.authHeader,
+      limiter: this.limiter,
+      retry: this.config.retry,
+    }
+  }
+
+  /** Runs a generated client call within this instance's request context. */
+  private run<T>(fn: () => Promise<T>): Promise<T> {
+    return apimoRequestContext.run(this.requestContext, fn)
+  }
+
+  /** Validates a response body against a generated Zod schema. */
+  private parse<S extends z.ZodTypeAny>(schema: S, response: { data: unknown }, label: string): z.infer<S> {
+    const result = schema.safeParse(response.data)
+    if (!result.success) {
+      throw new ApiResponseValidationError(label, result.error)
+    }
+    return result.data
   }
 }
